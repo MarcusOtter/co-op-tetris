@@ -1,18 +1,13 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+// TODO: Remove monobehaviour and refactor
 public class Tetromino : MonoBehaviour
 {
     [SerializeField] private int _stepDistance = 1;
     [SerializeField] private float _stepDelay = 2f;
 
-    private bool[,] _boxes =
-    {
-        { false, false, true, false },
-        { false, false, true, false },
-        { false, false, true, false },
-        { false, false, true, false }
-    };
+    private TetrominoShape _tShape;
 
     private Transform[] _tetrominoBoxes;
     // private bool _isFalling = true;
@@ -28,6 +23,9 @@ public class Tetromino : MonoBehaviour
             _tetrominoBoxes[i].gameObject.SetActive(false);
         }
 
+        _tShape = new TetrominoShape();
+        print($"We got a {_tShape.Letter} tetromino");
+
         DrawTetromino();
     }
 
@@ -37,10 +35,13 @@ public class Tetromino : MonoBehaviour
         {
             for (int x = 0; x < 4; x++)
             {
-                if (_boxes[y, x]) 
+                if (_tShape.Shape[y, x] != ' ') 
                 {
-                    _tetrominoBoxes[y].gameObject.SetActive(true);
-                    _tetrominoBoxes[y].localPosition = new Vector2(x, y);
+                    print($"one box at {x},{y}");
+                    // grab a box from a pooler and place it at x, y
+                    // color it also, probably (depending on the letter)
+                    //_tetrominoBoxes[y].gameObject.SetActive(true);
+                    //_tetrominoBoxes[y].localPosition = new Vector2(x, y);
                 }
             }
         }
