@@ -8,12 +8,16 @@ public class TetrominoShape
     private readonly char[] _availableLetters 
         = new char[] { 'I', 'J', 'L', 'O', 'S', 'Z', 'T' };
 
+    private static Random _random;
+
     /// <summary>
     /// Constructs a random shape
     /// </summary>
     public TetrominoShape()
     {
-        var randomLetter = _availableLetters[new Random().Next(0, _availableLetters.Length)];
+        if (_random == null) { _random = new Random(); }
+
+        var randomLetter = _availableLetters[_random.Next(0, _availableLetters.Length)];
 
         Letter = randomLetter;
         Shape = GetShapeByLetter(randomLetter);
@@ -41,8 +45,7 @@ public class TetrominoShape
             case 'Z': return _shape_Z;
             case 'T': return _shape_T;
 
-            default:
-                throw new Exception($"There is no '{letter}' tetromino.");
+            default: throw new Exception($"There is no '{letter}' tetromino.");
         }
     }
 

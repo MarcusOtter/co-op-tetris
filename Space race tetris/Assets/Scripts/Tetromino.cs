@@ -1,32 +1,49 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-// TODO: Remove monobehaviour and refactor
 public class Tetromino : MonoBehaviour
 {
-    [SerializeField] private int _stepDistance = 1;
-    [SerializeField] private float _stepDelay = 2f;
+    private TetrominoShape _tetrominoShape;
 
-    private TetrominoShape _tShape;
-
-    private Transform[] _tetrominoBoxes;
-    // private bool _isFalling = true;
-
-    //private TetrominoManager _tetrominoManager;
+    private BoxPool _boxPool;
 
     private void Awake()
     {
-        _tetrominoBoxes = new Transform[transform.childCount];
-        for (int i = 0; i < _tetrominoBoxes.Length; i++)
+        _tetrominoShape = new TetrominoShape();
+        //print($"We got a {_tetrominoShape.Letter} tetromino");
+    }
+
+    private void Start()
+    {
+        _boxPool = FindObjectOfType<BoxPool>();
+        StartCoroutine(TempGenerator());
+    }
+
+    private IEnumerator TempGenerator()
+    {
+        while (true)
         {
-            _tetrominoBoxes[i] = transform.GetChild(i);
-            _tetrominoBoxes[i].gameObject.SetActive(false);
+            RemoveAllChildren();
+
+            TetrominoShape newShape;
+            do
+            {
+                newShape = new TetrominoShape();
+            }
+            while (_tetrominoShape == newShape);
+
+            _tetrominoShape = newShape;
+            DrawTetromino();
+            yield return new WaitForSeconds(0.25f);
         }
+    }
 
-        _tShape = new TetrominoShape();
-        print($"We got a {_tShape.Letter} tetromino");
-
-        DrawTetromino();
+    private void RemoveAllChildren()
+    {
+        while (transform.childCount != 0)
+        {
+            _boxPool.AddBoxToPool(transform.GetChild(0).gameObject);
+        }
     }
 
     private void DrawTetromino()
@@ -35,15 +52,31 @@ public class Tetromino : MonoBehaviour
         {
             for (int x = 0; x < 4; x++)
             {
-                if (_tShape.Shape[y, x] != ' ') 
-                {
-                    print($"one box at {x},{y}");
-                    // grab a box from a pooler and place it at x, y
-                    // color it also, probably (depending on the letter)
-                    //_tetrominoBoxes[y].gameObject.SetActive(true);
-                    //_tetrominoBoxes[y].localPosition = new Vector2(x, y);
-                }
+                var letter = _tetrominoShape.Shape[y, x];
+                if (letter == ' ') { continue; }
+
+                var box = _boxPool.GetBox();
+                box.transform.SetParent(transform);
+                box.transform.localPosition = new Vector2(x, y);
+                box.GetComponent<SpriteRenderer>().color = GetColorFromLetter(letter);
+                box.gameObject.SetActive(true);
             }
+        }
+    }
+
+    private Color GetColorFromLetter(char letter)
+    {
+        switch (letter)
+        {
+            case 'C': return Color.cyan;
+            case 'B': return Color.blue;
+            case 'O': return new Color32(232, 157, 38, 255); // Orange
+            case 'Y': return Color.yellow;
+            case 'G': return Color.green;
+            case 'R': return Color.red;
+            case 'P': return new Color32(120, 30, 237, 255); // Purple
+
+            default: throw new System.Exception($"There is no color that corresponds with the letter '{letter}'");
         }
     }
 
