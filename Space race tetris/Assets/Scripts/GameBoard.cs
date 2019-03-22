@@ -8,7 +8,7 @@ public class GameBoard : MonoBehaviour
     internal static event EventHandler OnTetrominoTick;
 
     [Header("Prefab references")]
-    [SerializeField] private GameObject _boxPrefab;
+    [SerializeField] private Box _boxPrefab;
 
     [Header("Board size")]
     [SerializeField] private float _leftBoundX;
@@ -19,8 +19,8 @@ public class GameBoard : MonoBehaviour
     [SerializeField] private float _defaultDelay = 1f;
     [SerializeField] private float _shortDelay = 0.025f;
 
-    private Queue<GameObject> _pooledBoxes = new Queue<GameObject>();
-    private List<GameObject> _enabledBoxes = new List<GameObject>();
+    private Queue<Box> _pooledBoxes = new Queue<Box>();
+    private List<Box> _enabledBoxes = new List<Box>();
 
     private bool _gameIsActive = true;
 
@@ -66,7 +66,7 @@ public class GameBoard : MonoBehaviour
         }
     }
 
-    internal GameObject GetBox()
+    internal Box GetDeactivatedBox()
     {
         if (_pooledBoxes.Count == 0)
         {
@@ -75,15 +75,13 @@ public class GameBoard : MonoBehaviour
 
         var boxToUnpool = _pooledBoxes.Dequeue();
         _enabledBoxes.Add(boxToUnpool);
-        boxToUnpool.SetActive(true);
 
         return boxToUnpool;
     }
 
-    internal void AddBoxToPool(GameObject boxToPool)
+    internal void AddBoxToPool(Box boxToPool)
     {
-        boxToPool.SetActive(false);
-        boxToPool.transform.parent = transform;
+        boxToPool.Deactivate();
 
         if (_enabledBoxes.Contains(boxToPool))
         {

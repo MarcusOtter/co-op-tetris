@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
+    public bool Highlighted; // public for testing purposes
+
     private TetrominoShape _tetrominoShape;
     private GameBoard _gameBoard;
 
-    private Transform[] _boxesToCollisionCheck;
-    private Transform[] _boxes;
+    private Box[] _boxesToCollisionCheck;
+    private Box[] _boxes;
 
     private void Start()
     {
@@ -24,7 +26,7 @@ public class Tetromino : MonoBehaviour
     {
         foreach (var box in _boxesToCollisionCheck)
         {
-            if (_gameBoard.TileIsOccupied(new Vector2Int((int) box.position.x, (int) box.position.y - 1)))
+            if (_gameBoard.TileIsOccupied(new Vector2Int((int) box.transform.position.x, (int) box.transform.position.y - 1)))
             {
                 return;
             }
@@ -58,13 +60,13 @@ public class Tetromino : MonoBehaviour
         _tetrominoShape = newShape;
     }
 
-    private Transform[] GetAllChildBoxes()
+    private Box[] GetAllChildBoxes()
     {
-        Transform[] childBoxes = new Transform[transform.childCount];
+        Box[] childBoxes = new Box[transform.childCount];
 
         for (int i = 0; i < transform.childCount; i++)
         {
-            childBoxes[i] = transform.GetChild(i);
+            childBoxes[i] = transform.GetChild(i).GetComponent<Box>();
         }
 
         return childBoxes;
@@ -74,12 +76,13 @@ public class Tetromino : MonoBehaviour
     /// Returns an array of the boxes from <paramref name="allBoxes"/>
     /// that does not have another box (from the <paramref name="allBoxes"/> array) under it.
     /// </summary>
-    private Transform[] GetBoxesToCollisionCheck(Transform[] allBoxes)
+    private Box[] GetBoxesToCollisionCheck(Box[] allBoxes)
     {
-        Transform[] boxesToCollisionCheck = allBoxes
+        // Yes, a bit messy. But this is my sweet little baby, and she's fully functional.
+        Box[] boxesToCollisionCheck = allBoxes
             .Where(a => !allBoxes
-                   .Any(b => (int) b.localPosition.x == (int) a.localPosition.x
-                          && (int) b.localPosition.y == (int) a.localPosition.y - 1))
+                   .Any(b => (int) b.transform.localPosition.x == (int) a.transform.localPosition.x
+                          && (int) b.transform.localPosition.y == (int) a.transform.localPosition.y - 1))
             .ToArray();
 
         return boxesToCollisionCheck;
@@ -89,7 +92,7 @@ public class Tetromino : MonoBehaviour
     {
         while (transform.childCount != 0)
         {
-            _gameBoard.AddBoxToPool(transform.GetChild(0).gameObject);
+            _gameBoard.AddBoxToPool(transform.GetChild(0).GetComponent<Box>());
         }
     }
 
@@ -102,16 +105,21 @@ public class Tetromino : MonoBehaviour
                 var letter = _tetrominoShape.Shape[y, x];
                 if (letter == ' ') { continue; }
 
-                var box = _gameBoard.GetBox();
-                box.transform.SetParent(transform);
-                box.transform.localPosition = new Vector2(x, -y);
-                box.GetComponent<SpriteRenderer>().color = GetColorFromLetter(letter);
-                box.gameObject.SetActive(true);
+                var box = _gameBoard.GetDeactivatedBox();
+                box.Activate(transform, new Vector2(x, -y), GetColorFromLetter(letter));
             }
         }
 
         _boxes = GetAllChildBoxes();
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
+
+        if (Highlighted)
+        {
+            foreach(var box in _boxes)
+            {
+                box.HighlightBox(true);
+            }
+        }
     }
 
     private Color GetColorFromLetter(char letter)
