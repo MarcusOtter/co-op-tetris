@@ -7,7 +7,13 @@ public class GameBoard : MonoBehaviour
 {
     internal static event EventHandler OnTetrominoTick;
 
+    [Header("Prefab references")]
     [SerializeField] private GameObject _boxPrefab;
+
+    [Header("Board size")]
+    [SerializeField] private float _leftBoundX;
+    [SerializeField] private float _rightBoundX;
+    [SerializeField] private float _bottomBoundY;
 
     private Queue<GameObject> _pooledBoxes = new Queue<GameObject>();
     private List<GameObject> _enabledBoxes = new List<GameObject>();
@@ -55,15 +61,22 @@ public class GameBoard : MonoBehaviour
 
         _pooledBoxes.Enqueue(boxToPool);
     }
-    
+
     internal bool TileIsOccupied(Vector2Int tilePosition)
     {
+        // Ensure tile is within the board bounds
+        if (tilePosition.x <= _leftBoundX) { return true; }
+        if (tilePosition.x >= _rightBoundX) { return true; }
+        if (tilePosition.y <= _bottomBoundY) { return true; }
+
+        // Checks if any boxes are already in this position
         foreach (var box in _enabledBoxes)
         {
-            if (box.transform.position.x != tilePosition.x) { continue; }
-            if (box.transform.position.y != tilePosition.y) { continue; }
+            // If X doesn't match, Y doesn't have to be checked (and vice versa)
+            if ((int) box.transform.position.x != tilePosition.x) { continue; }
 
-            return true;
+            // Both X and Y matches, which means this tile is occupied
+            if ((int) box.transform.position.y == tilePosition.y) { return true; }
         }
 
         return false;
