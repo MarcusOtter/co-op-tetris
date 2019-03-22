@@ -1,48 +1,87 @@
-﻿using System.Collections;
+﻿using System;
+using System.Linq;
 using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
+    public bool IsFalling;
+
     private TetrominoShape _tetrominoShape;
-
-    private BoxPool _boxPool;
-
-    private void Awake()
-    {
-        _tetrominoShape = new TetrominoShape();
-        //print($"We got a {_tetrominoShape.Letter} tetromino");
-    }
+    private GameBoard _gameBoard;
 
     private void Start()
     {
-        _boxPool = FindObjectOfType<BoxPool>();
-        StartCoroutine(TempGenerator());
+        _gameBoard = FindObjectOfType<GameBoard>();
+        GameBoard.OnTetrominoTick += AttemptDescent;
+
+        RemoveAllChildren();
+        GenerateNewShape();
+        DrawTetromino();
     }
 
-    private IEnumerator TempGenerator()
+    // TODO: Fix ultra hacky implementation
+    private void AttemptDescent(object sender, EventArgs e)
     {
-        while (true)
+        if (!IsFalling) return;
+
+        var legalMove = true;
+
+        Transform[] children = new Transform[transform.childCount];
+        for (int i = 0; i < transform.childCount; i++)
         {
-            RemoveAllChildren();
-
-            TetrominoShape newShape;
-            do
-            {
-                newShape = new TetrominoShape();
-            }
-            while (_tetrominoShape == newShape);
-
-            _tetrominoShape = newShape;
-            DrawTetromino();
-            yield return new WaitForSeconds(0.25f);
+            children[i] = transform.GetChild(i);
         }
+
+        children = children.OrderBy(x => x.localPosition.y).ToArray();
+        Transform[] lowestChildren = children.Where(x => x.localPosition.y == children[0].localPosition.y).ToArray();
+
+        // THIS DOES NOT WORK FOR SOME PIECES:
+        // THE TETROMINO NEEDS TO CHECK EVERY BOX THAT DOESN'T HAVE A BOX OF THIS TETROMINO UNDER IT
+
+        foreach (var child in lowestChildren)
+        {
+            if (_gameBoard.TileIsOccupied(new Vector2Int((int) child.position.x, (int) child.position.y - 1)))
+            {
+                legalMove = false;
+            }
+        }
+
+        if (legalMove)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
+        }
+    }
+
+    /*
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            // Recalculates the shape of the tetromino
+            RemoveAllChildren();
+            GenerateNewShape();
+            DrawTetromino();
+        }
+    }
+    */
+
+    private void GenerateNewShape()
+    {
+        TetrominoShape newShape;
+        do
+        {
+            newShape = new TetrominoShape();
+        }
+        while (_tetrominoShape == newShape);
+
+        _tetrominoShape = newShape;
     }
 
     private void RemoveAllChildren()
     {
         while (transform.childCount != 0)
         {
-            _boxPool.AddBoxToPool(transform.GetChild(0).gameObject);
+            _gameBoard.AddBoxToPool(transform.GetChild(0).gameObject);
         }
     }
 
@@ -55,9 +94,9 @@ public class Tetromino : MonoBehaviour
                 var letter = _tetrominoShape.Shape[y, x];
                 if (letter == ' ') { continue; }
 
-                var box = _boxPool.GetBox();
+                var box = _gameBoard.GetBox();
                 box.transform.SetParent(transform);
-                box.transform.localPosition = new Vector2(x, y);
+                box.transform.localPosition = new Vector2(x, -y);
                 box.GetComponent<SpriteRenderer>().color = GetColorFromLetter(letter);
                 box.gameObject.SetActive(true);
             }
@@ -70,13 +109,13 @@ public class Tetromino : MonoBehaviour
         {
             case 'C': return Color.cyan;
             case 'B': return Color.blue;
-            case 'O': return new Color32(232, 157, 38, 255); // Orange
+            case 'O': return new Color32(232, 144, 0, 255); // Orange
             case 'Y': return Color.yellow;
             case 'G': return Color.green;
             case 'R': return Color.red;
-            case 'P': return new Color32(120, 30, 237, 255); // Purple
+            case 'P': return new Color32(140, 50, 255, 255); // Purple
 
-            default: throw new System.Exception($"There is no color that corresponds with the letter '{letter}'");
+            default: throw new Exception($"There is no color that corresponds with the letter '{letter}'");
         }
     }
 

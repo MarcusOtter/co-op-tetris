@@ -4,6 +4,7 @@ public class TetrominoShape
 {
     internal readonly char Letter;
     internal readonly char[,] Shape;
+    // Rotation variable or make the Shape non-readonly
 
     private readonly char[] _availableLetters 
         = new char[] { 'I', 'J', 'L', 'O', 'S', 'Z', 'T' };
