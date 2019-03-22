@@ -14,24 +14,55 @@ public class GameBoard : MonoBehaviour
     [SerializeField] private float _leftBoundX;
     [SerializeField] private float _rightBoundX;
     [SerializeField] private float _bottomBoundY;
+    
+    [Header("Fall speed")]
+    [SerializeField] private float _defaultDelay = 1f;
+    [SerializeField] private float _shortDelay = 0.025f;
 
     private Queue<GameObject> _pooledBoxes = new Queue<GameObject>();
     private List<GameObject> _enabledBoxes = new List<GameObject>();
 
     private bool _gameIsActive = true;
 
+    private Coroutine _activeTick;
+
     private void Awake()
     {
         IncreasePoolCapacity(40);
-        StartCoroutine(TetrominoTick());
+        _activeTick = StartCoroutine(DefaultTickDelay());
     }
 
-    private IEnumerator TetrominoTick()
+    private bool _isHoldingSpace;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            StopCoroutine(_activeTick);
+            _activeTick = StartCoroutine(ShortTickDelay());
+        }
+        else if (Input.GetKeyUp(KeyCode.Space))
+        {
+            StopCoroutine(_activeTick);
+            _activeTick = StartCoroutine(DefaultTickDelay());
+        }
+    }
+
+    private IEnumerator DefaultTickDelay()
     {
         while (_gameIsActive)
         {
             OnTetrominoTick?.Invoke(this, EventArgs.Empty);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(_defaultDelay);
+        }
+    }
+
+    private IEnumerator ShortTickDelay()
+    {
+        while (_gameIsActive)
+        {
+            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
+            yield return new WaitForSeconds(_shortDelay);
         }
     }
 
