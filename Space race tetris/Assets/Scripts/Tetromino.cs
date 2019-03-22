@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
-    public bool IsFalling;
-
     private TetrominoShape _tetrominoShape;
     private GameBoard _gameBoard;
+
+    private Transform[] _boxesToCollisionCheck;
+    private Transform[] _boxes;
 
     private void Start()
     {
@@ -19,37 +20,17 @@ public class Tetromino : MonoBehaviour
         DrawTetromino();
     }
 
-    // TODO: Fix ultra hacky implementation
     private void AttemptDescent(object sender, EventArgs e)
     {
-        if (!IsFalling) return;
-
-        var legalMove = true;
-
-        Transform[] children = new Transform[transform.childCount];
-        for (int i = 0; i < transform.childCount; i++)
+        foreach (var box in _boxesToCollisionCheck)
         {
-            children[i] = transform.GetChild(i);
-        }
-
-        children = children.OrderBy(x => x.localPosition.y).ToArray();
-        Transform[] lowestChildren = children.Where(x => x.localPosition.y == children[0].localPosition.y).ToArray();
-
-        // THIS DOES NOT WORK FOR SOME PIECES:
-        // THE TETROMINO NEEDS TO CHECK EVERY BOX THAT DOESN'T HAVE A BOX OF THIS TETROMINO UNDER IT
-
-        foreach (var child in lowestChildren)
-        {
-            if (_gameBoard.TileIsOccupied(new Vector2Int((int) child.position.x, (int) child.position.y - 1)))
+            if (_gameBoard.TileIsOccupied(new Vector2Int((int) box.position.x, (int) box.position.y - 1)))
             {
-                legalMove = false;
+                return;
             }
         }
 
-        if (legalMove)
-        {
-            transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
-        }
+        transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
     }
 
     /*
@@ -77,6 +58,33 @@ public class Tetromino : MonoBehaviour
         _tetrominoShape = newShape;
     }
 
+    private Transform[] GetAllChildBoxes()
+    {
+        Transform[] childBoxes = new Transform[transform.childCount];
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            childBoxes[i] = transform.GetChild(i);
+        }
+
+        return childBoxes;
+    }
+
+    /// <summary>
+    /// Returns an array of the boxes from <paramref name="allBoxes"/>
+    /// that does not have another box (from the <paramref name="allBoxes"/> array) under it.
+    /// </summary>
+    private Transform[] GetBoxesToCollisionCheck(Transform[] allBoxes)
+    {
+        Transform[] boxesToCollisionCheck = allBoxes
+            .Where(a => !allBoxes
+                   .Any(b => (int) b.localPosition.x == (int) a.localPosition.x
+                          && (int) b.localPosition.y == (int) a.localPosition.y - 1))
+            .ToArray();
+
+        return boxesToCollisionCheck;
+    }
+
     private void RemoveAllChildren()
     {
         while (transform.childCount != 0)
@@ -101,6 +109,9 @@ public class Tetromino : MonoBehaviour
                 box.gameObject.SetActive(true);
             }
         }
+
+        _boxes = GetAllChildBoxes();
+        _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
     }
 
     private Color GetColorFromLetter(char letter)
@@ -118,32 +129,4 @@ public class Tetromino : MonoBehaviour
             default: throw new Exception($"There is no color that corresponds with the letter '{letter}'");
         }
     }
-
-    /*
-    private void Start()
-    {
-        _tetrominoManager = FindObjectOfType<TetrominoManager>();
-    }
-
-    private void MoveDown()
-    {
-        foreach (var box in _tetrominoBoxes)
-        {
-            if (_tetrominoManager.BoxIsOccupied(new Vector2Int((int) box.position.x, (int) box.position.y - _stepDistance))) { return; }
-        }
-
-        transform.position = new Vector3(transform.position.x, transform.position.y - _stepDistance, 0);
-    }
-
-
-    private IEnumerator TempSteps()
-    {
-        while (_isFalling)
-        {
-            yield return new WaitForSeconds(_stepDelay);
-
-            MoveDown();
-        }
-    }
-    */
 }
