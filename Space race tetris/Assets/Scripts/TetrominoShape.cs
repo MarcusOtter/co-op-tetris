@@ -1,108 +1,37 @@
-﻿using System;
-
-public class TetrominoShape
+﻿public struct TetrominoShape
 {
     internal readonly char Letter;
     internal readonly char[,] Shape;
-    // Rotation variable or make the Shape non-readonly
+    internal readonly int Rotation;
 
-    private readonly char[] _availableLetters 
-        = new char[] { 'I', 'J', 'L', 'O', 'S', 'Z', 'T' };
-
-    private static Random _random;
-
-    /// <summary>
-    /// Constructs a random shape
-    /// </summary>
-    public TetrominoShape()
-    {
-        if (_random == null) { _random = new Random(); }
-
-        var randomLetter = _availableLetters[_random.Next(0, _availableLetters.Length)];
-
-        Letter = randomLetter;
-        Shape = GetShapeByLetter(randomLetter);
-    }
-
-    /// <summary>
-    /// Constructs a shape from the given letter
-    /// </summary>
-    /// <param name="letter">The letter to use as a tetromino shape</param>
-    public TetrominoShape(char letter)
+    public TetrominoShape(char letter, char[,] shape, int rotation)
     {
         Letter = letter;
-        Shape = GetShapeByLetter(letter);
-    }
-    
-    private char[,] GetShapeByLetter(char letter)
-    {
-        switch (char.ToUpper(letter))
-        {
-            case 'I': return _shape_I;
-            case 'J': return _shape_J;
-            case 'L': return _shape_L;
-            case 'O': return _shape_O;
-            case 'S': return _shape_S;
-            case 'Z': return _shape_Z;
-            case 'T': return _shape_T;
-
-            default: throw new Exception($"There is no '{letter}' tetromino.");
-        }
+        Shape = shape;
+        Rotation = rotation;
     }
 
-    private readonly char[,] _shape_I =
+    public static bool operator ==(TetrominoShape shape1, TetrominoShape shape2)
     {
-        { ' ', ' ', 'C', ' ' },
-        { ' ', ' ', 'C', ' ' },
-        { ' ', ' ', 'C', ' ' },
-        { ' ', ' ', 'C', ' ' }
-    };
+        return shape1.Equals(shape2);
+    }
 
-    private readonly char[,] _shape_J =
+    public static bool operator !=(TetrominoShape shape1, TetrominoShape shape2)
     {
-        { ' ', ' ', 'B', ' ' },
-        { ' ', ' ', 'B', ' ' },
-        { ' ', 'B', 'B', ' ' },
-        { ' ', ' ', ' ', ' ' }
-    };
+        return !shape1.Equals(shape2);
+    }
 
-    private readonly char[,] _shape_L =
+    public override bool Equals(object obj)
     {
-        { ' ', 'O', ' ', ' ' },
-        { ' ', 'O', ' ', ' ' },
-        { ' ', 'O', 'O', ' ' },
-        { ' ', ' ', ' ', ' ' }
-    };
+        if (!(obj is TetrominoShape)) { return false; }
+        var otherTetrominoShape = (TetrominoShape) obj;
 
-    private readonly char[,] _shape_O =
-    {
-        { ' ', ' ', ' ', ' ' },
-        { ' ', 'Y', 'Y', ' ' },
-        { ' ', 'Y', 'Y', ' ' },
-        { ' ', ' ', ' ', ' ' }
-    };
+        return Letter == otherTetrominoShape.Letter
+            && Rotation == otherTetrominoShape.Rotation;
+    }
 
-    private readonly char[,] _shape_S =
+    public override int GetHashCode()
     {
-        { ' ', ' ', ' ', ' ' },
-        { ' ', ' ', 'G', 'G' },
-        { ' ', 'G', 'G', ' ' },
-        { ' ', ' ', ' ', ' ' }
-    };
-
-    private readonly char[,] _shape_Z =
-    {
-        { ' ', ' ', ' ', ' ' },
-        { 'R', 'R', ' ', ' ' },
-        { ' ', 'R', 'R', ' ' },
-        { ' ', ' ', ' ', ' ' }
-    };
-
-    private readonly char[,] _shape_T =
-    {
-        { ' ', ' ', ' ', ' ' },
-        { ' ', 'P', 'P', 'P' },
-        { ' ', ' ', 'P', ' ' },
-        { ' ', ' ', ' ', ' ' }
-    };
+        return Letter.GetHashCode() ^ Rotation.GetHashCode();
+    }
 }

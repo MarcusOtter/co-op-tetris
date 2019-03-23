@@ -75,7 +75,7 @@ public class Tetromino : MonoBehaviour
         TetrominoShape newShape;
         do
         {
-            newShape = new TetrominoShape();
+            newShape = TetrominoShapeHelper.GetRandomTetrominoShape();
         }
         while (_tetrominoShape == newShape);
 
@@ -118,6 +118,10 @@ public class Tetromino : MonoBehaviour
         }
     }
 
+    // Should probably be renamed to convey that
+    // it's getting boxes and activating them if the 
+    // character in _tetrominoShape.Shape is not the space character.
+    // Also currently recalculates _boxes and _boxesToCollisionCheck.
     private void DrawTetromino()
     {
         for (int y = 0; y < 4; y++)
@@ -128,36 +132,21 @@ public class Tetromino : MonoBehaviour
                 if (letter == ' ') { continue; }
 
                 var box = _gameBoard.GetDeactivatedBox();
-                box.Activate(transform, new Vector2(x, -y), GetColorFromLetter(letter));
+                box.Activate(transform, new Vector2(x, -y), letter);
             }
         }
 
+        // Move this outside of here too?
         _boxes = GetAllChildBoxes();
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
 
-        // Should be moved
+        // Should be moved to separate method
         if (Highlighted)
         {
             foreach(var box in _boxes)
             {
                 box.HighlightBox(true);
             }
-        }
-    }
-
-    private Color GetColorFromLetter(char letter)
-    {
-        switch (letter)
-        {
-            case 'C': return Color.cyan;
-            case 'B': return Color.blue;
-            case 'O': return new Color32(232, 144, 0, 255); // Orange
-            case 'Y': return Color.yellow;
-            case 'G': return Color.green;
-            case 'R': return Color.red;
-            case 'P': return new Color32(140, 50, 255, 255); // Purple
-
-            default: throw new Exception($"There is no color that corresponds with the letter '{letter}'");
         }
     }
 }
