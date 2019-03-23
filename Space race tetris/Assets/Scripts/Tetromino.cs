@@ -22,17 +22,39 @@ public class Tetromino : MonoBehaviour
         DrawTetromino();
     }
 
+    internal void RemoveBoxesWithYPosition(int yPosition)
+    {
+        Box[] matchingBoxes = _boxes.Where(x => (int) x.transform.position.y == yPosition).ToArray();
+
+        if (matchingBoxes.Length == 0) { return; }
+
+        foreach (Box box in matchingBoxes)
+        {
+            _gameBoard.AddBoxToPool(box);
+        }
+
+        _boxes = GetAllChildBoxes();
+        _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
+    }
+
     private void AttemptDescent(object sender, EventArgs e)
+    {
+        if (!CanMoveDown()) { return; }
+        transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
+    }
+
+    private bool CanMoveDown()
     {
         foreach (var box in _boxesToCollisionCheck)
         {
-            if (_gameBoard.TileIsOccupied(new Vector2Int((int) box.transform.position.x, (int) box.transform.position.y - 1)))
+            if (!box.CanMoveDown)
             {
-                return;
+                //Tell the gameBoard that this tetromino is now static
+                return false;
             }
         }
 
-        transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
+        return true;
     }
 
     /*
@@ -74,7 +96,7 @@ public class Tetromino : MonoBehaviour
 
     /// <summary>
     /// Returns an array of the boxes from <paramref name="allBoxes"/>
-    /// that does not have another box (from the <paramref name="allBoxes"/> array) under it.
+    /// that does not have another box (from the <paramref name="allBoxes"/> array) directly under it.
     /// </summary>
     private Box[] GetBoxesToCollisionCheck(Box[] allBoxes)
     {
@@ -113,6 +135,7 @@ public class Tetromino : MonoBehaviour
         _boxes = GetAllChildBoxes();
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
 
+        // Should be moved
         if (Highlighted)
         {
             foreach(var box in _boxes)

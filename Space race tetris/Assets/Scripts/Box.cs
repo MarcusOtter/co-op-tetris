@@ -5,7 +5,7 @@ public class Box : MonoBehaviour
 {
     [SerializeField] private GameObject _outlineObject;
 
-    private Transform _gameBoardTransform;
+    private GameBoard _gameBoard;
 
     private SpriteRenderer _spriteRenderer;
 
@@ -16,8 +16,11 @@ public class Box : MonoBehaviour
 
     private void Start()
     {
-        _gameBoardTransform = FindObjectOfType<GameBoard>().transform;
+        _gameBoard = FindObjectOfType<GameBoard>();
     }
+
+    internal bool CanMoveDown
+        => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x, (int) transform.position.y - 1));
 
     internal void Activate(Transform parentTetromino, Vector2 localPosition, Color boxColor)
     {
@@ -29,7 +32,9 @@ public class Box : MonoBehaviour
 
     internal void Deactivate()
     {
-        transform.SetParent(_gameBoardTransform);
+        if (_gameBoard == null) { _gameBoard = FindObjectOfType<GameBoard>(); }
+
+        transform.SetParent(_gameBoard.transform);
         gameObject.SetActive(false);
     }
 

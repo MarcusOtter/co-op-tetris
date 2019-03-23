@@ -7,13 +7,15 @@ public class GameBoard : MonoBehaviour
 {
     internal static event EventHandler OnTetrominoTick;
 
+    internal int GroundYPosition => _bottomBoundY + 1;
+
     [Header("Prefab references")]
     [SerializeField] private Box _boxPrefab;
 
     [Header("Board size")]
-    [SerializeField] private float _leftBoundX;
-    [SerializeField] private float _rightBoundX;
-    [SerializeField] private float _bottomBoundY;
+    [SerializeField] private int _leftBoundX = 1;
+    [SerializeField] private int _rightBoundX = 41;
+    [SerializeField] private int _bottomBoundY = 1;
     
     [Header("Fall speed")]
     [SerializeField] private float _defaultDelay = 1f;
