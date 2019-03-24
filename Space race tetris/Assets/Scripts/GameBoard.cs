@@ -7,15 +7,14 @@ public class GameBoard : MonoBehaviour
 {
     internal static event EventHandler OnTetrominoTick;
 
-    internal int GroundYPosition => _bottomBoundY + 1;
-
     [Header("Prefab references")]
     [SerializeField] private Box _boxPrefab;
 
     [Header("Board size")]
-    [SerializeField] private int _leftBoundX = 1;
-    [SerializeField] private int _rightBoundX = 41;
-    [SerializeField] private int _bottomBoundY = 1;
+    [SerializeField] internal int LeftBoundX = 1;
+    [SerializeField] internal int RightBoundX = 41;
+    [SerializeField] internal int UpperBoundY = 23;
+    [SerializeField] internal int BottomBoundY = 1;
     
     [Header("Fall speed")]
     [SerializeField] private float _defaultDelay = 1f;
@@ -96,9 +95,9 @@ public class GameBoard : MonoBehaviour
     internal bool TileIsOccupied(Vector2Int tilePosition)
     {
         // Ensure tile is within the board bounds
-        if (tilePosition.x <= _leftBoundX) { return true; }
-        if (tilePosition.x >= _rightBoundX) { return true; }
-        if (tilePosition.y <= _bottomBoundY) { return true; }
+        if (tilePosition.x <= LeftBoundX) { return true; }
+        if (tilePosition.x >= RightBoundX) { return true; }
+        if (tilePosition.y <= BottomBoundY) { return true; }
 
         // Checks if any boxes are already in this position
         foreach (var box in _enabledBoxes)

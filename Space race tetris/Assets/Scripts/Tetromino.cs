@@ -49,7 +49,9 @@ public class Tetromino : MonoBehaviour
         {
             if (!box.CanMoveDown)
             {
-                //Tell the gameBoard that this tetromino is now static
+                // Tell the gameBoard that this tetromino is now static
+                // Check if the game is lost by iterating through the boxes and check Y position
+                // (that can be done by the gameBoard)
                 return false;
             }
         }
