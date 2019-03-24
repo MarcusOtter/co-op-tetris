@@ -14,8 +14,9 @@ public class Tetromino : MonoBehaviour
 
     private void Start()
     {
+        // Inject this from the generator
         _gameBoard = FindObjectOfType<GameBoard>();
-        GameBoard.OnTetrominoTick += AttemptDescent;
+        GameBoard.OnTetrominoTick += AttemptDescent; // Remove this event
 
         RemoveAllChildren();
         GenerateNewShape();

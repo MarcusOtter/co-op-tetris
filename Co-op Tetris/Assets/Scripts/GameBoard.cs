@@ -58,6 +58,8 @@ public class GameBoard : MonoBehaviour
         }
     }
 
+    // This is extremely heavy when many tetrominoes are in play.
+    // Should loop over the active tetrominoes and call methods on those instead.
     private IEnumerator ShortTickDelay()
     {
         while (_gameIsActive)
