@@ -1,2 +1,3 @@
-# space-race-tetris
-Co-op tetris made for an arcade box. Made in Unity 2018.3.
+# co-op-tetris
+Co-op tetris made for two players. Made in Unity 2018.3.
+More information, showcases and download links will be added later.
