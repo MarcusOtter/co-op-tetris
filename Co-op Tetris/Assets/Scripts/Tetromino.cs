@@ -4,15 +4,13 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
-    public bool Highlighted; // public for testing purposes
-
     private TetrominoShape _tetrominoShape;
     private GameBoard _gameBoard;
 
     private Box[] _boxesToCollisionCheck;
     private Box[] _boxes;
 
-    private void Start()
+    private void Awake()
     {
         // Inject this from the generator
         _gameBoard = FindObjectOfType<GameBoard>();
@@ -36,6 +34,14 @@ public class Tetromino : MonoBehaviour
 
         _boxes = GetAllChildBoxes();
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
+    }
+
+    internal void HighlightTetromino(bool highlight)
+    {
+        foreach (var box in _boxes)
+        {
+            box.HighlightBox(highlight);
+        }
     }
 
     private void AttemptDescent(object sender, EventArgs e)
@@ -142,14 +148,5 @@ public class Tetromino : MonoBehaviour
         // Move this outside of here too?
         _boxes = GetAllChildBoxes();
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
-
-        // Should be moved to separate method
-        if (Highlighted)
-        {
-            foreach(var box in _boxes)
-            {
-                box.HighlightBox(true);
-            }
-        }
     }
 }

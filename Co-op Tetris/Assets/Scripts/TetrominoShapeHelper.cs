@@ -13,6 +13,11 @@ public static class TetrominoShapeHelper
         return new TetrominoShape(letter, shape, rotation);
     }
 
+    internal static TetrominoShape GetTetrominoShape(char letter, int rotation)
+    {
+        return new TetrominoShape(letter, GetShape(letter, rotation), rotation);
+    }
+
     internal static TetrominoShape RotateShape(TetrominoShape shapeToRotate, int rotationDelta)
     {
         int oldRotation = shapeToRotate.Rotation;
