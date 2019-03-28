@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 
 public class Tetromino : MonoBehaviour
@@ -10,11 +9,9 @@ public class Tetromino : MonoBehaviour
     private Box[] _boxesToCollisionCheck;
     private Box[] _boxes;
 
-    private void Awake()
+    internal void Initialize(GameBoard gameBoard)
     {
-        // Inject this from the generator
-        _gameBoard = FindObjectOfType<GameBoard>();
-        GameBoard.OnTetrominoTick += AttemptDescent; // Remove this event
+        _gameBoard = gameBoard;
 
         RemoveAllChildren();
         GenerateNewShape();
@@ -44,10 +41,15 @@ public class Tetromino : MonoBehaviour
         }
     }
 
-    private void AttemptDescent(object sender, EventArgs e)
+    internal void AttemptDescent()
     {
         if (!CanMoveDown()) { return; }
         transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
+    }
+
+    internal bool HasBoxWithYPosition(int yPosition)
+    {
+        return _boxes.Any(x => x.transform.position.y == yPosition);
     }
 
     private bool CanMoveDown()
@@ -56,28 +58,13 @@ public class Tetromino : MonoBehaviour
         {
             if (!box.CanMoveDown)
             {
-                // Tell the gameBoard that this tetromino is now static
-                // Check if the game is lost by iterating through the boxes and check Y position
-                // (that can be done by the gameBoard)
+                _gameBoard.DeactivateTetromino(this);
                 return false;
             }
         }
 
         return true;
     }
-
-    /*
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            // Recalculates the shape of the tetromino
-            RemoveAllChildren();
-            GenerateNewShape();
-            DrawTetromino();
-        }
-    }
-    */
 
     private void GenerateNewShape()
     {

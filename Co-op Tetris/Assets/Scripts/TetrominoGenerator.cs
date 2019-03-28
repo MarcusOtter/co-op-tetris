@@ -6,6 +6,8 @@ public class TetrominoGenerator : MonoBehaviour
 
     [SerializeField] private Tetromino _tetrominoPrefab;
 
+    private GameBoard _gameBoard;
+
     private float _spawnDelayMax = 1;
     private float _spawnDelay;
     private int _tickCount = 4;
@@ -23,6 +25,7 @@ public class TetrominoGenerator : MonoBehaviour
     {
         SetSpawnPositions();
         GameBoard.OnTetrominoTick += CountTick;
+        _gameBoard = FindObjectOfType<GameBoard>();
     }
 
     private void CountTick(object sender, System.EventArgs e)
@@ -60,14 +63,16 @@ public class TetrominoGenerator : MonoBehaviour
     private void SpawnRandomTetromino()
     {
         int randomX = Random.Range(_minSpawnPositionX, _maxSpawnPositionX + 1);
-        Instantiate(_tetrominoPrefab, new Vector3(randomX, _spawnPositionY, 0), Quaternion.identity);
+        var newTetromino = Instantiate(_tetrominoPrefab, new Vector3(randomX, _spawnPositionY, 0), Quaternion.identity);
+        newTetromino.Initialize(_gameBoard);
+        _gameBoard.ActivateTetromino(newTetromino);
     }
 
     private void SetSpawnPositions()
     {
-        var board = FindObjectOfType<GameBoard>();
-        _minSpawnPositionX = board.LeftBoundX + 1;
-        _maxSpawnPositionX = board.RightBoundX - 4;
-        _spawnPositionY = board.UpperBoundY + 4;
+        var gameBoard = FindObjectOfType<GameBoard>();
+        _minSpawnPositionX = gameBoard.LeftBoundX + 1;
+        _maxSpawnPositionX = gameBoard.RightBoundX - 4;
+        _spawnPositionY = gameBoard.UpperBoundY + 4;
     }
 }
