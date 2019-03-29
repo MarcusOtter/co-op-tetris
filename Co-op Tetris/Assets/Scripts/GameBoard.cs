@@ -39,77 +39,12 @@ public class GameBoard : MonoBehaviour
         _activeTick = StartCoroutine(DefaultTickDelay());
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        // This should be moved to an input class later on.
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            // Slow tick should always run.
-            // Fast tick should only run on the highlighted box
-            StopCoroutine(_activeTick);
-            _activeTick = StartCoroutine(ShortTickDelay());
-        }
-        else if (Input.GetKeyUp(KeyCode.Space))
-        {
-            StopCoroutine(_activeTick);
-            _activeTick = StartCoroutine(DefaultTickDelay());
-        }
+        InputManager.OnDownKeyDown += ActivateShortTick;
+        InputManager.OnDownKeyUp += ActivateSlowTick;
     }
 
-    private IEnumerator DefaultTickDelay()
-    {
-        while (_gameIsActive)
-        {
-            MoveActiveTetrominoesDown();
-
-            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
-            yield return new WaitForSeconds(_defaultDelay);
-        }
-    }
-
-    private IEnumerator ShortTickDelay()
-    {
-        while (_gameIsActive)
-        {
-            MoveActiveTetrominoesDown();
-
-            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
-            yield return new WaitForSeconds(_shortDelay);
-        }
-    }
-
-    private void MoveActiveTetrominoesDown()
-    {
-        foreach (var tetromino in _activeTetrominoes.OrderBy(x => x.transform.position.y))
-        {
-            tetromino.AttemptDescent();
-        }
-    }
-
-    internal void ActivateTetromino(Tetromino tetromino)
-    {
-        if (_deactivatedTetrominoes.Contains(tetromino))
-        {
-            _deactivatedTetrominoes.Remove(tetromino);
-        }
-
-        _activeTetrominoes.Add(tetromino);
-    }
-
-    // Add amount of boxes to like an active boxes thing or something?
-    // Tetrominoes should be deactivated once they reach the ground, but
-    // then a method would check if the tetromino has any boxes above the
-    // line that was removed (tetromino.HasBoxWithYPosition()). If so, make
-    // the tetromino active again.
-    internal void DeactivateTetromino(Tetromino tetromino)
-    {
-        if (_activeTetrominoes.Contains(tetromino))
-        {
-            _activeTetrominoes.Remove(tetromino);
-        }
-
-        _deactivatedTetrominoes.Add(tetromino);
-    }
 
     internal Box GetDeactivatedBox()
     {
@@ -139,8 +74,8 @@ public class GameBoard : MonoBehaviour
     internal bool TileIsOccupied(Vector2Int tilePosition)
     {
         // Ensure tile is within the board bounds
-        if (tilePosition.x <= LeftBoundX) { return true; }
-        if (tilePosition.x >= RightBoundX) { return true; }
+        if (tilePosition.x <= LeftBoundX)   { return true; }
+        if (tilePosition.x >= RightBoundX)  { return true; }
         if (tilePosition.y <= BottomBoundY) { return true; }
 
         // Checks if any boxes are already in this position
@@ -156,6 +91,73 @@ public class GameBoard : MonoBehaviour
         return false;
     }
 
+    internal void ActivateTetromino(Tetromino tetromino)
+    {
+        if (_deactivatedTetrominoes.Contains(tetromino))
+        {
+            _deactivatedTetrominoes.Remove(tetromino);
+        }
+
+        _activeTetrominoes.Add(tetromino);
+    }
+
+    // Add amount of boxes to like an active boxes thing or something?
+    // Tetrominoes should be deactivated once they reach the ground, but
+    // then a method would check if the tetromino has any boxes above the
+    // line that was removed (tetromino.HasBoxWithYPosition()). If so, make
+    // the tetromino active again.
+    internal void DeactivateTetromino(Tetromino tetromino)
+    {
+        if (_activeTetrominoes.Contains(tetromino))
+        {
+            _activeTetrominoes.Remove(tetromino);
+        }
+
+        _deactivatedTetrominoes.Add(tetromino);
+    }
+
+    private IEnumerator DefaultTickDelay()
+    {
+        while (_gameIsActive)
+        {
+            MoveActiveTetrominoesDown();
+            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
+            yield return new WaitForSeconds(_defaultDelay);
+        }
+    }
+
+    private IEnumerator ShortTickDelay()
+    {
+        while (_gameIsActive)
+        {
+            MoveActiveTetrominoesDown();
+            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
+            yield return new WaitForSeconds(_shortDelay);
+        }
+    }
+
+    // Slow tick should always run.
+    // Fast tick should only run on the highlighted tetromino (eventually)
+    private void ActivateShortTick(object sender, EventArgs e)
+    {
+        StopCoroutine(_activeTick);
+        _activeTick = StartCoroutine(ShortTickDelay());
+    }
+
+    private void ActivateSlowTick(object sender, EventArgs e)
+    {
+        StopCoroutine(_activeTick);
+        _activeTick = StartCoroutine(DefaultTickDelay());
+    }
+
+    private void MoveActiveTetrominoesDown()
+    {
+        foreach (var tetromino in _activeTetrominoes.OrderBy(x => x.transform.position.y))
+        {
+            tetromino.AttemptDescent();
+        }
+    }
+
     private void IncreasePoolCapacity(int amount)
     {
         for (int i = 0; i < amount; i++)
@@ -163,5 +165,11 @@ public class GameBoard : MonoBehaviour
             var newObject = Instantiate(_boxPrefab);
             AddBoxToPool(newObject);
         }
+    }
+
+    private void OnDisable()
+    {
+        InputManager.OnDownKeyDown -= ActivateShortTick;
+        InputManager.OnDownKeyUp -= ActivateSlowTick;
     }
 }
