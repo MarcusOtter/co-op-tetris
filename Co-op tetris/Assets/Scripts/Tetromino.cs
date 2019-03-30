@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
+    internal int BoxAmount => _boxes.Length;
+
     private TetrominoShape _tetrominoShape;
     private GameBoard _gameBoard;
 
@@ -47,17 +49,15 @@ public class Tetromino : MonoBehaviour
         transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
     }
 
-    internal bool HasBoxWithYPosition(int yPosition)
-    {
-        return _boxes.Any(x => x.transform.position.y == yPosition);
-    }
-
     private bool CanMoveDown()
     {
         foreach (var box in _boxesToCollisionCheck)
         {
             if (!box.CanMoveDown)
             {
+                // Important for performance, but currently removes
+                // a gameplay mechanic (read more over GameBoard.DeactivateTetromino)
+
                 //_gameBoard.DeactivateTetromino(this);
                 return false;
             }

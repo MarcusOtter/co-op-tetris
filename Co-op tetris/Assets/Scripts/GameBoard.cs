@@ -25,6 +25,7 @@ public class GameBoard : MonoBehaviour
     private Queue<Box> _pooledBoxes = new Queue<Box>();
     private List<Box> _enabledBoxes = new List<Box>();
 
+    // Rename to static and moving tetrominoes?
     private List<Tetromino> _activeTetrominoes = new List<Tetromino>();
     private List<Tetromino> _deactivatedTetrominoes = new List<Tetromino>();
 
@@ -90,12 +91,6 @@ public class GameBoard : MonoBehaviour
         return false;
     }
 
-    // Add amount of boxes to like an active boxes thing or something
-    // This is so all boxes above a specified y value can be shifted down
-    // all at once. (When a row is cleared)
-    // That shouldn't only be active boxes, but every box.
-    // Every box except the active ones perhaps?
-
     internal void ActivateTetromino(Tetromino tetromino)
     {
         if (_deactivatedTetrominoes.Contains(tetromino))
@@ -107,9 +102,9 @@ public class GameBoard : MonoBehaviour
     }
 
     // Tetrominoes should be deactivated once they reach the ground, but
-    // then a method would check if the tetromino has any boxes above the
-    // line that was shifted (tetromino.HasBoxWithYPosition()). If so, make
-    // the tetromino active again.
+    // then a method would force the tetromino to verify that it should still
+    // be deactivate again once a row is shifted or cleared. 
+    // Should be done from the ground up as usual.
     internal void DeactivateTetromino(Tetromino tetromino)
     {
         if (_activeTetrominoes.Contains(tetromino))
@@ -118,6 +113,68 @@ public class GameBoard : MonoBehaviour
         }
 
         _deactivatedTetrominoes.Add(tetromino);
+    }
+
+    private void RemoveRow(int yPosition)
+    {
+        foreach (var tetromino in _activeTetrominoes)
+        {
+            tetromino.RemoveBoxesWithYPosition(yPosition);
+        }
+
+        foreach (var tetromino in _deactivatedTetrominoes)
+        {
+            tetromino.RemoveBoxesWithYPosition(yPosition);
+        }
+
+        var boxesToShift = _enabledBoxes
+            .Where(x => x.transform.position.y > yPosition)
+            .OrderBy(x => x.transform.position.y)
+            .ToArray();
+
+        foreach (var box in boxesToShift)
+        {
+            box.transform.position 
+                = new Vector3(box.transform.position.x, box.transform.position.y - 1, 0);
+        }
+
+        ClearEmptyTetrominoes();
+    }
+
+    // Used after removing a row of boxes to clear up empty tetrominoes
+    private void ClearEmptyTetrominoes()
+    {
+        List<Tetromino> emptyTetrominoes = new List<Tetromino>();
+
+        foreach(var tetromino in _activeTetrominoes)
+        {
+            if (tetromino.BoxAmount == 0) { emptyTetrominoes.Add(tetromino); }
+        }
+
+        foreach(var tetromino in _deactivatedTetrominoes)
+        {
+            if (tetromino.BoxAmount == 0) { emptyTetrominoes.Add(tetromino); }
+        }
+
+        foreach(var emptyTetromino in emptyTetrominoes)
+        {
+            DestroyTetromino(emptyTetromino);
+        }
+    }
+
+    internal void DestroyTetromino(Tetromino tetromino)
+    {
+        if (_activeTetrominoes.Contains(tetromino))
+        {
+            _activeTetrominoes.Remove(tetromino);
+        }
+
+        if (_deactivatedTetrominoes.Contains(tetromino))
+        {
+            _activeTetrominoes.Remove(tetromino);
+        }
+
+        Destroy(tetromino.gameObject);
     }
 
     private IEnumerator DefaultTickDelay()
