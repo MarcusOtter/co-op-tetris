@@ -35,7 +35,7 @@ public class GameBoard : MonoBehaviour
 
     private void Awake()
     {
-        IncreasePoolCapacity(80);
+        IncreasePoolCapacity(256);
         _activeTick = StartCoroutine(DefaultTickDelay());
     }
 

@@ -3897,7 +3897,7 @@ MonoBehaviour:
   LeftBoundX: 1
   RightBoundX: 41
   UpperBoundY: 23
-  BottomBoundY: -30
+  BottomBoundY: 1
   _defaultDelay: 1
   _shortDelay: 0.05
 --- !u!4 &871334853
@@ -6230,7 +6230,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1372356112}
   m_Layer: 0
-  m_Name: Bounds
+  m_Name: Visual board bounds
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
