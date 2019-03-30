@@ -15,7 +15,8 @@ public class Tetromino : MonoBehaviour
 
         RemoveAllChildren();
         GenerateNewShape();
-        DrawTetromino();
+        GetAndPlaceNewBoxes();
+        RecalculateBoxes();
     }
 
     internal void RemoveBoxesWithYPosition(int yPosition)
@@ -29,8 +30,7 @@ public class Tetromino : MonoBehaviour
             _gameBoard.AddBoxToPool(box);
         }
 
-        _boxes = GetAllChildBoxes();
-        _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
+        RecalculateBoxes();
     }
 
     internal void HighlightTetromino(bool highlight)
@@ -58,12 +58,18 @@ public class Tetromino : MonoBehaviour
         {
             if (!box.CanMoveDown)
             {
-                _gameBoard.DeactivateTetromino(this);
+                //_gameBoard.DeactivateTetromino(this);
                 return false;
             }
         }
 
         return true;
+    }
+
+    private void RecalculateBoxes()
+    {
+        _boxes = GetAllChildBoxes();
+        _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
     }
 
     private void GenerateNewShape()
@@ -114,11 +120,7 @@ public class Tetromino : MonoBehaviour
         }
     }
 
-    // Should probably be renamed to convey that
-    // it's getting boxes and activating them if the 
-    // character in _tetrominoShape.Shape is not the space character.
-    // Also currently recalculates _boxes and _boxesToCollisionCheck.
-    private void DrawTetromino()
+    private void GetAndPlaceNewBoxes()
     {
         for (int y = 0; y < 4; y++)
         {
@@ -131,9 +133,5 @@ public class Tetromino : MonoBehaviour
                 box.Activate(transform, new Vector2(x, -y), letter);
             }
         }
-
-        // Move this outside of here too?
-        _boxes = GetAllChildBoxes();
-        _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
     }
 }

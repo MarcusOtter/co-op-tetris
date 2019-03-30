@@ -45,7 +45,6 @@ public class GameBoard : MonoBehaviour
         InputManager.OnDownKeyUp += ActivateSlowTick;
     }
 
-
     internal Box GetDeactivatedBox()
     {
         if (_pooledBoxes.Count == 0)
@@ -74,9 +73,9 @@ public class GameBoard : MonoBehaviour
     internal bool TileIsOccupied(Vector2Int tilePosition)
     {
         // Ensure tile is within the board bounds
+        if (tilePosition.y <= BottomBoundY) { return true; }
         if (tilePosition.x <= LeftBoundX)   { return true; }
         if (tilePosition.x >= RightBoundX)  { return true; }
-        if (tilePosition.y <= BottomBoundY) { return true; }
 
         // Checks if any boxes are already in this position
         foreach (var box in _enabledBoxes)
@@ -91,6 +90,12 @@ public class GameBoard : MonoBehaviour
         return false;
     }
 
+    // Add amount of boxes to like an active boxes thing or something
+    // This is so all boxes above a specified y value can be shifted down
+    // all at once. (When a row is cleared)
+    // That shouldn't only be active boxes, but every box.
+    // Every box except the active ones perhaps?
+
     internal void ActivateTetromino(Tetromino tetromino)
     {
         if (_deactivatedTetrominoes.Contains(tetromino))
@@ -101,10 +106,9 @@ public class GameBoard : MonoBehaviour
         _activeTetrominoes.Add(tetromino);
     }
 
-    // Add amount of boxes to like an active boxes thing or something?
     // Tetrominoes should be deactivated once they reach the ground, but
     // then a method would check if the tetromino has any boxes above the
-    // line that was removed (tetromino.HasBoxWithYPosition()). If so, make
+    // line that was shifted (tetromino.HasBoxWithYPosition()). If so, make
     // the tetromino active again.
     internal void DeactivateTetromino(Tetromino tetromino)
     {
