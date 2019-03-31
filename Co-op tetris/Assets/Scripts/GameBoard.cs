@@ -118,6 +118,21 @@ public class GameBoard : MonoBehaviour
         }
 
         _staticTetrominoes.Add(tetromino);
+
+        // Check the modified rows and remove them if they are filled up
+        foreach(int yPos in tetromino.GetUniqueBoxYPositions())
+        {
+            print($"Checking {yPos}");
+            if (RowIsFull(yPos)) { RemoveRow(yPos); }
+        }
+    }
+
+    private bool RowIsFull(int yPosition)
+    {
+        int fullRowBoxAmount = RightBoundX - LeftBoundX - 1;
+        return _enabledBoxes
+            .Where(x => x.transform.position.y == yPosition)
+            .Count() == fullRowBoxAmount;
     }
 
     private void MakeTetrominoFalling(Tetromino tetromino)
@@ -248,8 +263,9 @@ public class GameBoard : MonoBehaviour
     {
         for (int i = 0; i < amount; i++)
         {
-            var newObject = Instantiate(_boxPrefab);
-            AddBoxToPool(newObject);
+            var newBox= Instantiate(_boxPrefab);
+            newBox.Initialize(this);
+            AddBoxToPool(newBox);
         }
     }
 

@@ -22,6 +22,18 @@ public class Tetromino : MonoBehaviour
         RecalculateBoxes();
     }
 
+    internal int[] GetUniqueBoxYPositions()
+    {
+        int[] yPositions = new int[_boxes.Length];
+
+        for (int i = 0; i < _boxes.Length; i++)
+        {
+            yPositions[i] = (int) _boxes[i].transform.position.y;
+        }
+
+        return yPositions.Distinct().ToArray();
+    }
+
     internal void RemoveBoxesWithYPosition(int yPosition)
     {
         Box[] matchingBoxes = _boxes.Where(x => (int) x.transform.position.y == yPosition).ToArray();
@@ -73,6 +85,7 @@ public class Tetromino : MonoBehaviour
         _boxes = GetAllChildBoxes();
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
     }
+
 
     private void GenerateNewShape()
     {
