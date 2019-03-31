@@ -5,21 +5,16 @@ public class TetrominoGenerator : MonoBehaviour
     private const int TetrominoHeight = 4;
 
     [SerializeField] private Tetromino _tetrominoPrefab;
+    [SerializeField] private float _spawnDelayMax = 2;
 
     private GameBoard _gameBoard;
 
-    private float _spawnDelayMax = 1;
     private float _spawnDelay;
     private int _tickCount = 4;
 
     private int _minSpawnPositionX;
     private int _maxSpawnPositionX;
     private int _spawnPositionY;
-
-    private void Awake()
-    {
-        _spawnDelay = _spawnDelayMax;
-    }
 
     private void OnEnable()
     {
@@ -28,8 +23,8 @@ public class TetrominoGenerator : MonoBehaviour
 
     private void Start()
     {
-        SetSpawnPositions();
         _gameBoard = FindObjectOfType<GameBoard>();
+        SetSpawnPositions();
     }
 
     private void CountTick(object sender, System.EventArgs e)
@@ -49,6 +44,7 @@ public class TetrominoGenerator : MonoBehaviour
 
         SpawnRandomTetromino();
         _tickCount = 0;
+        _spawnDelay = _spawnDelayMax;
     }
 
     private void SpawnRandomTetromino()
@@ -61,11 +57,10 @@ public class TetrominoGenerator : MonoBehaviour
 
     private void SetSpawnPositions()
     {
-        // This ensures that no tetromino will spawn outside the bounds of the walls
-        var gameBoard = FindObjectOfType<GameBoard>();
-        _minSpawnPositionX = gameBoard.LeftBoundX + 1;
-        _maxSpawnPositionX = gameBoard.RightBoundX - 4;
-        _spawnPositionY = gameBoard.UpperBoundY + 4;
+        // Ensures that no tetromino will spawn outside the bounds of the walls
+        _minSpawnPositionX = _gameBoard.LeftBoundX + 1;
+        _maxSpawnPositionX = _gameBoard.RightBoundX - 4;
+        _spawnPositionY = _gameBoard.UpperBoundY + 4;
     }
 
     private void OnDisable()

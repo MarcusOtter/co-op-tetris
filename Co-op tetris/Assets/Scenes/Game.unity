@@ -8827,6 +8827,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _tetrominoPrefab: {fileID: 8244468002234132322, guid: 6ec34b0657966384982ad06cb740acde,
     type: 3}
+  _spawnDelayMax: 2
 --- !u!4 &2098290163
 Transform:
   m_ObjectHideFlags: 0
