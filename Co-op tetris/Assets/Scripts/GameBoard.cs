@@ -25,9 +25,8 @@ public class GameBoard : MonoBehaviour
     private Queue<Box> _pooledBoxes = new Queue<Box>();
     private List<Box> _enabledBoxes = new List<Box>();
 
-    // Rename to static and moving tetrominoes?
-    private List<Tetromino> _activeTetrominoes = new List<Tetromino>();
-    private List<Tetromino> _deactivatedTetrominoes = new List<Tetromino>();
+    private List<Tetromino> _fallingTetrominoes = new List<Tetromino>();
+    private List<Tetromino> _staticTetrominoes = new List<Tetromino>();
 
     private bool _gameIsActive = true;
     private bool _isHoldingSpace;
@@ -91,38 +90,38 @@ public class GameBoard : MonoBehaviour
         return false;
     }
 
-    internal void ActivateTetromino(Tetromino tetromino)
+    internal void MakeTetrominoFalling(Tetromino tetromino)
     {
-        if (_deactivatedTetrominoes.Contains(tetromino))
+        if (_staticTetrominoes.Contains(tetromino))
         {
-            _deactivatedTetrominoes.Remove(tetromino);
+            _staticTetrominoes.Remove(tetromino);
         }
 
-        _activeTetrominoes.Add(tetromino);
+        _fallingTetrominoes.Add(tetromino);
     }
 
     // Tetrominoes should be deactivated once they reach the ground, but
     // then a method would force the tetromino to verify that it should still
     // be deactivate again once a row is shifted or cleared. 
     // Should be done from the ground up as usual.
-    internal void DeactivateTetromino(Tetromino tetromino)
+    internal void MakeTetrominoStatic(Tetromino tetromino)
     {
-        if (_activeTetrominoes.Contains(tetromino))
+        if (_fallingTetrominoes.Contains(tetromino))
         {
-            _activeTetrominoes.Remove(tetromino);
+            _fallingTetrominoes.Remove(tetromino);
         }
 
-        _deactivatedTetrominoes.Add(tetromino);
+        _staticTetrominoes.Add(tetromino);
     }
 
     private void RemoveRow(int yPosition)
     {
-        foreach (var tetromino in _activeTetrominoes)
+        foreach (var tetromino in _fallingTetrominoes)
         {
             tetromino.RemoveBoxesWithYPosition(yPosition);
         }
 
-        foreach (var tetromino in _deactivatedTetrominoes)
+        foreach (var tetromino in _staticTetrominoes)
         {
             tetromino.RemoveBoxesWithYPosition(yPosition);
         }
@@ -146,12 +145,12 @@ public class GameBoard : MonoBehaviour
     {
         List<Tetromino> emptyTetrominoes = new List<Tetromino>();
 
-        foreach(var tetromino in _activeTetrominoes)
+        foreach(var tetromino in _fallingTetrominoes)
         {
             if (tetromino.BoxAmount == 0) { emptyTetrominoes.Add(tetromino); }
         }
 
-        foreach(var tetromino in _deactivatedTetrominoes)
+        foreach(var tetromino in _staticTetrominoes)
         {
             if (tetromino.BoxAmount == 0) { emptyTetrominoes.Add(tetromino); }
         }
@@ -164,14 +163,14 @@ public class GameBoard : MonoBehaviour
 
     internal void DestroyTetromino(Tetromino tetromino)
     {
-        if (_activeTetrominoes.Contains(tetromino))
+        if (_fallingTetrominoes.Contains(tetromino))
         {
-            _activeTetrominoes.Remove(tetromino);
+            _fallingTetrominoes.Remove(tetromino);
         }
 
-        if (_deactivatedTetrominoes.Contains(tetromino))
+        if (_staticTetrominoes.Contains(tetromino))
         {
-            _activeTetrominoes.Remove(tetromino);
+            _fallingTetrominoes.Remove(tetromino);
         }
 
         Destroy(tetromino.gameObject);
@@ -213,7 +212,7 @@ public class GameBoard : MonoBehaviour
 
     private void MoveActiveTetrominoesDown()
     {
-        foreach (var tetromino in _activeTetrominoes.OrderBy(x => x.transform.position.y))
+        foreach (var tetromino in _fallingTetrominoes.OrderBy(x => x.transform.position.y))
         {
             tetromino.AttemptDescent();
         }

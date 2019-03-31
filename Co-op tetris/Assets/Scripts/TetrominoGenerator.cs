@@ -56,7 +56,7 @@ public class TetrominoGenerator : MonoBehaviour
         int randomX = Random.Range(_minSpawnPositionX, _maxSpawnPositionX + 1);
         var newTetromino = Instantiate(_tetrominoPrefab, new Vector3(randomX, _spawnPositionY, 0), Quaternion.identity, transform);
         newTetromino.Initialize(_gameBoard);
-        _gameBoard.ActivateTetromino(newTetromino);
+        _gameBoard.MakeTetrominoFalling(newTetromino);
     }
 
     private void SetSpawnPositions()
