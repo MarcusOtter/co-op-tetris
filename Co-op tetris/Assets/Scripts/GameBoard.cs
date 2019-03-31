@@ -90,14 +90,14 @@ public class GameBoard : MonoBehaviour
         return false;
     }
 
-    internal void MakeTetrominoFalling(Tetromino tetromino)
+    internal void AddNewTetromino(Tetromino tetromino)
     {
-        if (_staticTetrominoes.Contains(tetromino))
+        if (!_fallingTetrominoes.Any())
         {
-            _staticTetrominoes.Remove(tetromino);
+            tetromino.SetHighlight(true);
         }
 
-        _fallingTetrominoes.Add(tetromino);
+        MakeTetrominoFalling(tetromino);
     }
 
     // Tetrominoes should be deactivated once they reach the ground, but
@@ -111,7 +111,33 @@ public class GameBoard : MonoBehaviour
             _fallingTetrominoes.Remove(tetromino);
         }
 
+        if (tetromino.IsHighlighted)
+        {
+            tetromino.SetHighlight(false);
+            HighlightLowestFallingTetromino();
+        }
+
         _staticTetrominoes.Add(tetromino);
+    }
+
+    private void MakeTetrominoFalling(Tetromino tetromino)
+    {
+        if (_staticTetrominoes.Contains(tetromino))
+        {
+            _staticTetrominoes.Remove(tetromino);
+        }
+
+        _fallingTetrominoes.Add(tetromino);
+    }
+
+    private void HighlightLowestFallingTetromino()
+    {
+        if (!_fallingTetrominoes.Any()) { return; }
+
+        _fallingTetrominoes
+            .OrderBy(x => x.transform.position.y)
+            .FirstOrDefault()
+            .SetHighlight(true);
     }
 
     private void RemoveRow(int yPosition)

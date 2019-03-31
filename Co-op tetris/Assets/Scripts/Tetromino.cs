@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
+    internal bool IsHighlighted { get; private set; }
     internal int BoxAmount => _boxes.Length;
 
     private TetrominoShape _tetrominoShape;
@@ -35,12 +36,14 @@ public class Tetromino : MonoBehaviour
         RecalculateBoxes();
     }
 
-    internal void HighlightTetromino(bool highlight)
+    internal void SetHighlight(bool highlight)
     {
         foreach (var box in _boxes)
         {
             box.HighlightBox(highlight);
         }
+
+        IsHighlighted = highlight;
     }
 
     internal void AttemptDescent()
@@ -56,9 +59,8 @@ public class Tetromino : MonoBehaviour
             if (!box.CanMoveDown)
             {
                 // Important for performance, but currently removes
-                // a gameplay mechanic (read more over GameBoard.DeactivateTetromino)
-
-                //_gameBoard.DeactivateTetromino(this);
+                // a gameplay mechanic (read more over GameBoard.MakeTetrominoStatic)
+                _gameBoard.MakeTetrominoStatic(this);
                 return false;
             }
         }
