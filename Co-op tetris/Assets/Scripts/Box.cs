@@ -9,14 +9,10 @@ public class Box : MonoBehaviour
 
     private SpriteRenderer _spriteRenderer;
 
-    private void Awake()
+    internal void Initialize(GameBoard gameBoard)
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
-    }
-
-    private void Start()
-    {
-        _gameBoard = FindObjectOfType<GameBoard>();
+        _gameBoard = gameBoard;
     }
 
     internal bool CanMoveDown
