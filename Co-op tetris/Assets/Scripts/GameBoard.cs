@@ -122,17 +122,8 @@ public class GameBoard : MonoBehaviour
         // Check the modified rows and remove them if they are filled up
         foreach(int yPos in tetromino.GetUniqueBoxYPositions())
         {
-            print($"Checking {yPos}");
             if (RowIsFull(yPos)) { RemoveRow(yPos); }
         }
-    }
-
-    private bool RowIsFull(int yPosition)
-    {
-        int fullRowBoxAmount = RightBoundX - LeftBoundX - 1;
-        return _enabledBoxes
-            .Where(x => x.transform.position.y == yPosition)
-            .Count() == fullRowBoxAmount;
     }
 
     private void MakeTetrominoFalling(Tetromino tetromino)
@@ -140,6 +131,11 @@ public class GameBoard : MonoBehaviour
         if (_staticTetrominoes.Contains(tetromino))
         {
             _staticTetrominoes.Remove(tetromino);
+        }
+
+        if (_fallingTetrominoes.Contains(tetromino))
+        {
+            return;
         }
 
         _fallingTetrominoes.Add(tetromino);
@@ -155,6 +151,14 @@ public class GameBoard : MonoBehaviour
             .SetHighlight(true);
     }
 
+    private bool RowIsFull(int yPosition)
+    {
+        int fullRowBoxAmount = RightBoundX - LeftBoundX - 1;
+        return _enabledBoxes
+            .Where(x => x.transform.position.y == yPosition)
+            .Count() == fullRowBoxAmount;
+    }
+
     private void RemoveRow(int yPosition)
     {
         foreach (var tetromino in _fallingTetrominoes)
@@ -167,34 +171,38 @@ public class GameBoard : MonoBehaviour
             tetromino.RemoveBoxesWithYPosition(yPosition);
         }
 
-        var boxesToShift = _enabledBoxes
-            .Where(x => x.transform.position.y > yPosition)
+        // TODO: Extract method
+        var boxesToSetFalling = _enabledBoxes
+            .Where(x => x.transform.position.y >= yPosition)
             .OrderBy(x => x.transform.position.y)
             .ToArray();
 
-        foreach (var box in boxesToShift)
+        foreach (var box in boxesToSetFalling)
         {
-            box.transform.position 
-                = new Vector3(box.transform.position.x, box.transform.position.y - 1, 0);
+            MakeTetrominoFalling(box.ParentTetromino);
         }
+
+        // TODO: Should be extracted to separate method to shift boxes down
+        //var boxesToShift = _enabledBoxes
+        //    .Where(x => x.transform.position.y > yPosition)
+        //    .OrderBy(x => x.transform.position.y)
+        //    .ToArray();
+
+        //foreach (var box in boxesToShift)
+        //{
+        //    box.transform.position 
+        //        = new Vector3(box.transform.position.x, box.transform.position.y - 1, 0);
+        //}
 
         ClearEmptyTetrominoes();
     }
 
-    // Used after removing a row of boxes to clear up empty tetrominoes
     private void ClearEmptyTetrominoes()
     {
         List<Tetromino> emptyTetrominoes = new List<Tetromino>();
 
-        foreach(var tetromino in _fallingTetrominoes)
-        {
-            if (tetromino.BoxAmount == 0) { emptyTetrominoes.Add(tetromino); }
-        }
-
-        foreach(var tetromino in _staticTetrominoes)
-        {
-            if (tetromino.BoxAmount == 0) { emptyTetrominoes.Add(tetromino); }
-        }
+        emptyTetrominoes.AddRange(_fallingTetrominoes.Where(x => x.BoxAmount == 0));
+        emptyTetrominoes.AddRange(_staticTetrominoes .Where(x => x.BoxAmount == 0));
 
         foreach(var emptyTetromino in emptyTetrominoes)
         {
@@ -202,7 +210,7 @@ public class GameBoard : MonoBehaviour
         }
     }
 
-    internal void DestroyTetromino(Tetromino tetromino)
+    private void DestroyTetromino(Tetromino tetromino)
     {
         if (_fallingTetrominoes.Contains(tetromino))
         {
@@ -214,6 +222,7 @@ public class GameBoard : MonoBehaviour
             _fallingTetrominoes.Remove(tetromino);
         }
 
+        if (tetromino == null) { return; }
         Destroy(tetromino.gameObject);
     }
 

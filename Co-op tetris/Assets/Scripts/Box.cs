@@ -3,6 +3,8 @@
 [RequireComponent(typeof(SpriteRenderer))]
 public class Box : MonoBehaviour
 {
+    internal Tetromino ParentTetromino { get; private set; }
+
     [SerializeField] private GameObject _outlineObject;
 
     private GameBoard _gameBoard;
@@ -21,6 +23,8 @@ public class Box : MonoBehaviour
     internal void Activate(Transform parentTetromino, Vector2 localPosition, char colorLetter)
     {
         transform.SetParent(parentTetromino);
+        ParentTetromino = parentTetromino.GetComponent<Tetromino>();
+
         transform.localPosition = localPosition;
         _spriteRenderer.color = GetColorFromLetter(colorLetter);
         gameObject.SetActive(true);
