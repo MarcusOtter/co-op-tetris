@@ -23,8 +23,8 @@ InputManager:
     joyNum: 0
   - serializedVersion: 3
     m_Name: L_Vertical
-    descriptiveName: 
-    descriptiveNegativeName: 
+    descriptiveName: Player 1 up
+    descriptiveNegativeName: Player 1 down
     negativeButton: s
     positiveButton: w
     altNegativeButton: 
@@ -39,7 +39,7 @@ InputManager:
     joyNum: 0
   - serializedVersion: 3
     m_Name: L_Btn1
-    descriptiveName: 
+    descriptiveName: Player 1 Action1
     descriptiveNegativeName: 
     negativeButton: 
     positiveButton: e
@@ -55,7 +55,7 @@ InputManager:
     joyNum: 0
   - serializedVersion: 3
     m_Name: L_Btn2
-    descriptiveName: 
+    descriptiveName: Player 1 Action2
     descriptiveNegativeName: 
     negativeButton: 
     positiveButton: r
@@ -71,7 +71,7 @@ InputManager:
     joyNum: 0
   - serializedVersion: 3
     m_Name: L_Btn3
-    descriptiveName: 
+    descriptiveName: Player 1 Action3
     descriptiveNegativeName: 
     negativeButton: 
     positiveButton: f
