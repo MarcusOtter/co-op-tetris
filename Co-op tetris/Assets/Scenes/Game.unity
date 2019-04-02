@@ -3930,12 +3930,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _boxPrefab: {fileID: 7981807125191621573, guid: 166bd35ea109e4e37933da9cf4d96d60,
     type: 3}
-  LeftBoundX: 18
-  RightBoundX: 23
+  LeftBoundX: 12
+  RightBoundX: 30
   UpperBoundY: 23
   BottomBoundY: 1
   _defaultDelay: 1
-  _shortDelay: 0.05
+  _shortDelay: 0.5
 --- !u!4 &871334853
 Transform:
   m_ObjectHideFlags: 0
@@ -4176,7 +4176,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 933013730}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 18, y: 0, z: 0}
+  m_LocalPosition: {x: 12, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 484387811}
@@ -5441,7 +5441,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1112027034}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 23, y: 0, z: 0}
+  m_LocalPosition: {x: 30, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 640456665}
@@ -7956,6 +7956,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 489e6bc71baf9a3498a61f971436c541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _inputConfigs:
+  - {fileID: 11400000, guid: 3d450a8e485eb844ea054c9ceead645a, type: 2}
+  - {fileID: 11400000, guid: d737b8f9b7a3e3643a51ad45989f83bc, type: 2}
+  _joystickDeadzone: 0.1
 --- !u!4 &1842007157
 Transform:
   m_ObjectHideFlags: 0

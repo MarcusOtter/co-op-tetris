@@ -1,21 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    // TODO: 2 player input
-    // have an enum with different input modes i guess
-    internal static event EventHandler OnDownKeyDown;
-    internal static event EventHandler OnDownKeyUp;
+    internal static event EventHandler<int> OnUpDirectionPressed;
+    internal static event EventHandler<int> OnLeftDirectionPressed;
+    internal static event EventHandler<int> OnDownDirectionPressed;
+    internal static event EventHandler<int> OnDownDirectionReleased;
+    internal static event EventHandler<int> OnRightDirectionPressed;
 
-    internal static event EventHandler OnUpKeyDown;
-    internal static event EventHandler OnUpKeyUp;
+    internal static event EventHandler<int> OnAction1ButtonPressed;
+    internal static event EventHandler<int> OnAction2ButtonPressed;
+    internal static event EventHandler<int> OnAction3ButtonPressed;
 
-    internal static event EventHandler OnLeftKeyDown;
-    internal static event EventHandler OnLeftKeyUp;
+    [Header("Input configurations")]
+    [SerializeField] private PlayerInputKeyConfig[] _inputConfigs;
 
-    internal static event EventHandler OnRightKeyDown;
-    internal static event EventHandler OnRightKeyUp;
+    [Header("Other input settings")]
+    [SerializeField] private float _joystickDeadzone = 0.1f;
+
+    private List<int> _playersPressingDownDirection = new List<int>();
+
+    private void OnEnable()
+    {
+        OnDownDirectionPressed += RegisterPlayerPressingDownDirection;
+    }
 
     private void Update()
     {
@@ -24,16 +34,69 @@ public class InputManager : MonoBehaviour
 
     private void CheckForInputEvents()
     {
-        if      (Input.GetKeyDown(KeyCode.DownArrow))  { OnDownKeyDown? .Invoke(this, EventArgs.Empty); }
-        else if (Input.GetKeyUp  (KeyCode.DownArrow))  { OnDownKeyUp?   .Invoke(this, EventArgs.Empty); }
+        foreach(var config in _inputConfigs)
+        {
+            // Action buttons
+            if (ActionButtonPressed(PlayerInputAction.Action1, config)) { OnAction1ButtonPressed?.Invoke(this, config.PlayerNumber); }
+            if (ActionButtonPressed(PlayerInputAction.Action2, config)) { OnAction2ButtonPressed?.Invoke(this, config.PlayerNumber); }
+            if (ActionButtonPressed(PlayerInputAction.Action3, config)) { OnAction3ButtonPressed?.Invoke(this, config.PlayerNumber); }
 
-        if      (Input.GetKeyDown(KeyCode.UpArrow))    { OnUpKeyDown?   .Invoke(this, EventArgs.Empty); }
-        else if (Input.GetKeyUp  (KeyCode.UpArrow))    { OnUpKeyUp?     .Invoke(this, EventArgs.Empty); }
 
-        if      (Input.GetKeyDown(KeyCode.LeftArrow))  { OnLeftKeyDown? .Invoke(this, EventArgs.Empty); }
-        else if (Input.GetKeyUp  (KeyCode.LeftArrow))  { OnLeftKeyUp?   .Invoke(this, EventArgs.Empty); }
 
-        if      (Input.GetKeyDown(KeyCode.RightArrow)) { OnRightKeyDown?.Invoke(this, EventArgs.Empty); }
-        else if (Input.GetKeyUp  (KeyCode.RightArrow)) { OnRightKeyUp?  .Invoke(this, EventArgs.Empty); }
+            // These axis need to be changed... 
+            // Called when the axis is more than the deadzone
+            // not when it's newly over the deadzone
+
+            // (check if the axis is already pressed in that direction.. somehow)
+
+            // Horizontal axis
+            if      (AxisDirectionPressed(PlayerInputAction.Right, config)) { OnRightDirectionPressed?.Invoke(this, config.PlayerNumber); }
+            else if (AxisDirectionPressed(PlayerInputAction.Left,  config)) { OnLeftDirectionPressed ?.Invoke(this, config.PlayerNumber); }
+
+            // Vertical axis
+            if      (AxisDirectionPressed(PlayerInputAction.Up, config))   { OnUpDirectionPressed  ?.Invoke(this, config.PlayerNumber); }
+            else if (AxisDirectionPressed(PlayerInputAction.Down, config)) { OnDownDirectionPressed?.Invoke(this, config.PlayerNumber); }
+
+            // If this player was pressing the joystick downwards but now stopped doing so
+            else if (_playersPressingDownDirection.Contains(config.PlayerNumber)) 
+            {
+                _playersPressingDownDirection.Remove(config.PlayerNumber);
+                OnDownDirectionReleased?.Invoke(this, config.PlayerNumber);
+            }
+        }
+    }
+
+    private bool AxisDirectionPressed(PlayerInputAction action, PlayerInputKeyConfig config)
+    {
+        float axisValue = Input.GetAxisRaw(config.GetAxisNameFor(action));
+
+        switch (action)
+        {
+            case PlayerInputAction.Up:
+            case PlayerInputAction.Right:
+                return axisValue > _joystickDeadzone;
+
+            case PlayerInputAction.Down:
+            case PlayerInputAction.Left:
+                return axisValue < -_joystickDeadzone;
+
+            default: throw new Exception($"{action} does not have an axis.");
+        }
+    }
+
+    private bool ActionButtonPressed(PlayerInputAction action, PlayerInputKeyConfig config)
+    {
+        return Input.GetButtonDown(config.GetButtonNameFor(action));
+    }
+
+    private void RegisterPlayerPressingDownDirection(object sender, int playerNumber)
+    {
+        if (_playersPressingDownDirection.Contains(playerNumber)) { return;  }
+        _playersPressingDownDirection.Add(playerNumber);
+    }
+
+    private void OnDisable()
+    {
+        OnDownDirectionPressed -= RegisterPlayerPressingDownDirection;
     }
 }

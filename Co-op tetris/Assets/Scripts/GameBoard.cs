@@ -41,8 +41,8 @@ public class GameBoard : MonoBehaviour
 
     private void OnEnable()
     {
-        InputManager.OnDownKeyDown += ActivateShortTick;
-        InputManager.OnDownKeyUp += ActivateSlowTick;
+        InputManager.OnDownDirectionPressed += ActivateShortTick;
+        InputManager.OnDownDirectionReleased += ActivateSlowTick;
     }
 
     internal Box GetDeactivatedBox()
@@ -248,14 +248,18 @@ public class GameBoard : MonoBehaviour
 
     // Slow tick should always run.
     // Fast tick should only run on the highlighted tetromino (eventually)
-    private void ActivateShortTick(object sender, EventArgs e)
+    private void ActivateShortTick(object sender, int playerNumber)
     {
+        if (playerNumber != 1) { return; } // temp
+
         StopCoroutine(_activeTick);
         _activeTick = StartCoroutine(ShortTickDelay());
     }
 
-    private void ActivateSlowTick(object sender, EventArgs e)
+    private void ActivateSlowTick(object sender, int playerNumber)
     {
+        if (playerNumber != 1) { return; } // temp
+
         StopCoroutine(_activeTick);
         _activeTick = StartCoroutine(DefaultTickDelay());
     }
@@ -280,7 +284,7 @@ public class GameBoard : MonoBehaviour
 
     private void OnDisable()
     {
-        InputManager.OnDownKeyDown -= ActivateShortTick;
-        InputManager.OnDownKeyUp -= ActivateSlowTick;
+        InputManager.OnDownDirectionPressed -= ActivateShortTick;
+        InputManager.OnDownDirectionReleased -= ActivateSlowTick;
     }
 }
