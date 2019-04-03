@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
@@ -7,7 +6,7 @@ using System.Linq;
 public class GameBoard : MonoBehaviour
 {
     // For tetromino generator and (eventually) points.
-    internal static event EventHandler OnTetrominoTick; 
+    internal static event EventHandler OnTetrominoTick; // consider removing this event
 
     [Header("Prefab references")]
     [SerializeField] private Box _boxPrefab;
@@ -19,8 +18,8 @@ public class GameBoard : MonoBehaviour
     [SerializeField] internal int BottomBoundY = 1;
     
     [Header("Fall speed")]
-    [SerializeField] private float _defaultDelay = 1f;
-    [SerializeField] private float _shortDelay = 0.025f;
+    [SerializeField] private float _defaultTickDelay = 1f;
+    [SerializeField] private float _shortTickDelay = 0.05f;
 
     private Queue<Box> _pooledBoxes = new Queue<Box>();
     private List<Box> _enabledBoxes = new List<Box>();
@@ -28,21 +27,74 @@ public class GameBoard : MonoBehaviour
     private List<Tetromino> _fallingTetrominoes = new List<Tetromino>();
     private List<Tetromino> _staticTetrominoes = new List<Tetromino>();
 
-    private bool _gameIsActive = true;
-    private bool _isHoldingSpace;
+    private Tetromino _highlightedTetromino;
 
-    private Coroutine _activeTick;
+    private bool _usingShortTick;
+    private float _timeUntilDefaultTick;
+    private float _timeUntilShortTick;
 
     private void Awake()
     {
         IncreasePoolCapacity(256);
-        _activeTick = StartCoroutine(DefaultTickDelay());
     }
 
     private void OnEnable()
     {
-        InputManager.OnDownDirectionPressed += ActivateShortTick;
-        InputManager.OnDownDirectionReleased += ActivateSlowTick;
+        // Temp. Should be replaced with methods that handle player numbers.
+        InputManager.OnDownDirectionPressed += (object sender, int playerNumber) => _usingShortTick = true;
+        InputManager.OnDownDirectionReleased += (object sender, int playerNumber) => _usingShortTick = false;
+    }
+
+    private void Update()
+    {
+        UpdateTetrominoTimers();
+    }
+
+    private void UpdateTetrominoTimers()
+    {
+        UpdateDefaultTick();
+
+        if (_usingShortTick)
+        {
+            UpdateShortTick();
+        }
+    }
+
+    private void UpdateShortTick()
+    {
+        if (_timeUntilShortTick > 0)
+        {
+            _timeUntilShortTick -= Time.deltaTime;
+        }
+        else
+        {
+            ShortTick();
+            _timeUntilShortTick = _shortTickDelay;
+        }
+    }
+
+    private void UpdateDefaultTick()
+    {
+        if (_timeUntilDefaultTick > 0)
+        {
+            _timeUntilDefaultTick -= Time.deltaTime;
+        }
+        else
+        {
+            DefaultTick();
+            _timeUntilDefaultTick = _defaultTickDelay;
+        }
+    }
+
+    private void DefaultTick()
+    {
+        MoveActiveTetrominoesDown();
+        OnTetrominoTick?.Invoke(this, EventArgs.Empty); // consider removing this event
+    }
+
+    private void ShortTick()
+    {
+        MoveHighlightedTetrominoDown();
     }
 
     internal Box GetDeactivatedBox()
@@ -94,7 +146,7 @@ public class GameBoard : MonoBehaviour
     {
         if (!_fallingTetrominoes.Any())
         {
-            tetromino.SetHighlight(true);
+            HighlightTetromino(tetromino, true);
         }
 
         MakeTetrominoFalling(tetromino);
@@ -113,7 +165,7 @@ public class GameBoard : MonoBehaviour
 
         if (tetromino.IsHighlighted)
         {
-            tetromino.SetHighlight(false);
+            HighlightTetromino(tetromino, false);
             HighlightLowestFallingTetromino();
         }
 
@@ -141,14 +193,26 @@ public class GameBoard : MonoBehaviour
         _fallingTetrominoes.Add(tetromino);
     }
 
+    private void HighlightTetromino(Tetromino tetromino, bool highlight)
+    {
+        if (tetromino.IsHighlighted == highlight) { return;  }
+
+        if (highlight)
+        {
+            _highlightedTetromino = tetromino;
+        }
+        else
+        {
+            _highlightedTetromino = null;
+        }
+
+        tetromino.SetHighlight(highlight);
+    }
+
     private void HighlightLowestFallingTetromino()
     {
         if (!_fallingTetrominoes.Any()) { return; }
-
-        _fallingTetrominoes
-            .OrderBy(x => x.transform.position.y)
-            .FirstOrDefault()
-            .SetHighlight(true);
+        HighlightTetromino(_fallingTetrominoes.OrderBy(x => x.transform.position.y).FirstOrDefault(), true);
     }
 
     private bool RowIsFull(int yPosition)
@@ -171,7 +235,7 @@ public class GameBoard : MonoBehaviour
             tetromino.RemoveBoxesWithYPosition(yPosition);
         }
 
-        // TODO: Extract method
+        // TODO: Remake (Issue #22 on GitHub)
         var boxesToSetFalling = _enabledBoxes
             .Where(x => x.transform.position.y >= yPosition)
             .OrderBy(x => x.transform.position.y)
@@ -226,48 +290,18 @@ public class GameBoard : MonoBehaviour
         Destroy(tetromino.gameObject);
     }
 
-    private IEnumerator DefaultTickDelay()
+    private void MoveHighlightedTetrominoDown()
     {
-        while (_gameIsActive)
-        {
-            MoveActiveTetrominoesDown();
-            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
-            yield return new WaitForSeconds(_defaultDelay);
-        }
-    }
-
-    private IEnumerator ShortTickDelay()
-    {
-        while (_gameIsActive)
-        {
-            MoveActiveTetrominoesDown();
-            OnTetrominoTick?.Invoke(this, EventArgs.Empty);
-            yield return new WaitForSeconds(_shortDelay);
-        }
-    }
-
-    // Slow tick should always run.
-    // Fast tick should only run on the highlighted tetromino (eventually)
-    private void ActivateShortTick(object sender, int playerNumber)
-    {
-        if (playerNumber != 1) { return; } // temp
-
-        StopCoroutine(_activeTick);
-        _activeTick = StartCoroutine(ShortTickDelay());
-    }
-
-    private void ActivateSlowTick(object sender, int playerNumber)
-    {
-        if (playerNumber != 1) { return; } // temp
-
-        StopCoroutine(_activeTick);
-        _activeTick = StartCoroutine(DefaultTickDelay());
+        _highlightedTetromino?.AttemptDescent();
     }
 
     private void MoveActiveTetrominoesDown()
     {
         foreach (var tetromino in _fallingTetrominoes.OrderBy(x => x.transform.position.y))
         {
+            // Prevents double ticks on the highlighted tetromino while using short ticks too
+            if (tetromino.IsHighlighted && _usingShortTick) { continue;  }
+
             tetromino.AttemptDescent();
         }
     }
@@ -282,9 +316,9 @@ public class GameBoard : MonoBehaviour
         }
     }
 
-    private void OnDisable()
-    {
-        InputManager.OnDownDirectionPressed -= ActivateShortTick;
-        InputManager.OnDownDirectionReleased -= ActivateSlowTick;
-    }
+    //private void OnDisable()
+    //{
+    //    InputManager.OnDownDirectionPressed -= ActivateShortTick;
+    //    InputManager.OnDownDirectionReleased -= ActivateSlowTick;
+    //}
 }
