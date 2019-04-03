@@ -7,8 +7,9 @@ public class InputManager : MonoBehaviour
     internal static event EventHandler<int> OnUpDirectionPressed;
     internal static event EventHandler<int> OnLeftDirectionPressed;
     internal static event EventHandler<int> OnDownDirectionPressed;
-    internal static event EventHandler<int> OnDownDirectionReleased;
     internal static event EventHandler<int> OnRightDirectionPressed;
+
+    internal static event EventHandler<int> OnDownDirectionReleased;
 
     internal static event EventHandler<int> OnAction1ButtonPressed;
     internal static event EventHandler<int> OnAction2ButtonPressed;
@@ -20,83 +21,100 @@ public class InputManager : MonoBehaviour
     [Header("Other input settings")]
     [SerializeField] private float _joystickDeadzone = 0.1f;
 
-    private List<int> _playersPressingDownDirection = new List<int>();
+    private Dictionary<(PlayerInputKeyConfig, PlayerInputAction), bool> _playerIsPressingInputAction 
+        = new Dictionary<(PlayerInputKeyConfig, PlayerInputAction), bool>();
 
-    private void OnEnable()
-    {
-        OnDownDirectionPressed += RegisterPlayerPressingDownDirection;
-    }
+    private PlayerInputAction[] _availableInputActions;
 
-    private void Update()
+    private void Awake()
     {
-        CheckForInputEvents();
-    }
+        _availableInputActions = (PlayerInputAction[]) Enum.GetValues(typeof(PlayerInputAction));
 
-    private void CheckForInputEvents()
-    {
-        foreach(var config in _inputConfigs)
+        // Initialize dictionary
+        foreach (var inputConfig in _inputConfigs)
         {
-            // Action buttons
-            if (ActionButtonPressed(PlayerInputAction.Action1, config)) { OnAction1ButtonPressed?.Invoke(this, config.PlayerNumber); }
-            if (ActionButtonPressed(PlayerInputAction.Action2, config)) { OnAction2ButtonPressed?.Invoke(this, config.PlayerNumber); }
-            if (ActionButtonPressed(PlayerInputAction.Action3, config)) { OnAction3ButtonPressed?.Invoke(this, config.PlayerNumber); }
-
-
-
-            // These axis need to be changed... 
-            // Called when the axis is more than the deadzone
-            // not when it's newly over the deadzone
-
-            // (check if the axis is already pressed in that direction.. somehow)
-
-            // Horizontal axis
-            if      (AxisDirectionPressed(PlayerInputAction.Right, config)) { OnRightDirectionPressed?.Invoke(this, config.PlayerNumber); }
-            else if (AxisDirectionPressed(PlayerInputAction.Left,  config)) { OnLeftDirectionPressed ?.Invoke(this, config.PlayerNumber); }
-
-            // Vertical axis
-            if      (AxisDirectionPressed(PlayerInputAction.Up, config))   { OnUpDirectionPressed  ?.Invoke(this, config.PlayerNumber); }
-            else if (AxisDirectionPressed(PlayerInputAction.Down, config)) { OnDownDirectionPressed?.Invoke(this, config.PlayerNumber); }
-
-            // If this player was pressing the joystick downwards but now stopped doing so
-            else if (_playersPressingDownDirection.Contains(config.PlayerNumber)) 
+            foreach (var inputAction in _availableInputActions)
             {
-                _playersPressingDownDirection.Remove(config.PlayerNumber);
-                OnDownDirectionReleased?.Invoke(this, config.PlayerNumber);
+                _playerIsPressingInputAction[(inputConfig, inputAction)] = false;
             }
         }
     }
 
-    private bool AxisDirectionPressed(PlayerInputAction action, PlayerInputKeyConfig config)
+    private void Update()
     {
-        float axisValue = Input.GetAxisRaw(config.GetAxisNameFor(action));
-
-        switch (action)
+        foreach (var config in _inputConfigs)
         {
-            case PlayerInputAction.Up:
-            case PlayerInputAction.Right:
-                return axisValue > _joystickDeadzone;
-
-            case PlayerInputAction.Down:
-            case PlayerInputAction.Left:
-                return axisValue < -_joystickDeadzone;
-
-            default: throw new Exception($"{action} does not have an axis.");
+            foreach (var action in _availableInputActions)
+            {
+                _playerIsPressingInputAction[(config, action)] = InputActionBeingPressed(config, action);
+            }
         }
     }
 
-    private bool ActionButtonPressed(PlayerInputAction action, PlayerInputKeyConfig config)
+    private bool InputActionBeingPressed(PlayerInputKeyConfig config, PlayerInputAction action)
     {
-        return Input.GetButtonDown(config.GetButtonNameFor(action));
+        bool wasPressedLastFrame = _playerIsPressingInputAction[(config, action)];
+        bool beingPressed = false;
+
+        switch (action)
+        {
+            case PlayerInputAction.Action1:
+            case PlayerInputAction.Action2:
+            case PlayerInputAction.Action3:
+                beingPressed = Input.GetButton(config.GetButtonNameFor(action));
+                break;
+
+            case PlayerInputAction.Up:
+            case PlayerInputAction.Down:
+                float verticalAxisValue = Input.GetAxisRaw(config.GetAxisNameFor(action));
+                beingPressed = action == PlayerInputAction.Up
+                    ? verticalAxisValue > _joystickDeadzone
+                    : verticalAxisValue < -_joystickDeadzone;
+                break;
+
+            case PlayerInputAction.Right:
+            case PlayerInputAction.Left:
+                float horizontalAxisValue = Input.GetAxisRaw(config.GetAxisNameFor(action));
+                beingPressed = action == PlayerInputAction.Right
+                    ? horizontalAxisValue > _joystickDeadzone
+                    : horizontalAxisValue < -_joystickDeadzone;
+                break;
+        }
+
+        if (!wasPressedLastFrame && beingPressed)
+        {
+            CallOnPressedEvent(config.PlayerNumber, action);
+        }
+        else if (wasPressedLastFrame && !beingPressed)
+        {
+            CallOnReleasedEvent(config.PlayerNumber, action);
+        }
+
+        return beingPressed;
     }
 
-    private void RegisterPlayerPressingDownDirection(object sender, int playerNumber)
+    private void CallOnPressedEvent(int playerNumber, PlayerInputAction action)
     {
-        if (_playersPressingDownDirection.Contains(playerNumber)) { return;  }
-        _playersPressingDownDirection.Add(playerNumber);
+        switch (action)
+        {
+            case PlayerInputAction.Action1: OnAction1ButtonPressed? .Invoke(this, playerNumber); return;
+            case PlayerInputAction.Action2: OnAction2ButtonPressed? .Invoke(this, playerNumber); return;
+            case PlayerInputAction.Action3: OnAction3ButtonPressed? .Invoke(this, playerNumber); return;
+
+            case PlayerInputAction.Up:      OnUpDirectionPressed?   .Invoke(this, playerNumber); return;
+            case PlayerInputAction.Left:    OnLeftDirectionPressed? .Invoke(this, playerNumber); return;
+            case PlayerInputAction.Down:    OnDownDirectionPressed? .Invoke(this, playerNumber); return;
+            case PlayerInputAction.Right:   OnRightDirectionPressed?.Invoke(this, playerNumber); return;
+        }
     }
 
-    private void OnDisable()
+    private void CallOnReleasedEvent(int playerNumber, PlayerInputAction action)
     {
-        OnDownDirectionPressed -= RegisterPlayerPressingDownDirection;
+        switch (action)
+        {
+            case PlayerInputAction.Down: OnDownDirectionReleased?.Invoke(this, playerNumber); return;
+
+            // Add more events here later.
+        }
     }
 }

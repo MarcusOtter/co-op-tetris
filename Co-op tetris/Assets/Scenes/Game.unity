@@ -3935,7 +3935,7 @@ MonoBehaviour:
   UpperBoundY: 23
   BottomBoundY: 1
   _defaultDelay: 1
-  _shortDelay: 0.5
+  _shortDelay: 0.05
 --- !u!4 &871334853
 Transform:
   m_ObjectHideFlags: 0
