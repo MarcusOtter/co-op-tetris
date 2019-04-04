@@ -86,7 +86,6 @@ public class Tetromino : MonoBehaviour
         _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
     }
 
-
     private void GenerateNewShape()
     {
         TetrominoShape newShape;

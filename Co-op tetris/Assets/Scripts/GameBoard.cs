@@ -40,61 +40,25 @@ public class GameBoard : MonoBehaviour
 
     private void OnEnable()
     {
-        // Temp. Should be replaced with methods that handle player numbers.
-        InputManager.OnDownDirectionPressed += (object sender, int playerNumber) => _usingShortTick = true;
-        InputManager.OnDownDirectionReleased += (object sender, int playerNumber) => _usingShortTick = false;
+        InputManager.OnDownDirectionPressed += HandleOnDownDirectionPressed;
+        InputManager.OnDownDirectionReleased += HandleOnDownDirectionReleased;
+    }
+
+    private void HandleOnDownDirectionPressed(object sender, int playerNumber)
+    {
+        if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
+        _usingShortTick = true;
+    }
+
+    private void HandleOnDownDirectionReleased(object sender, int playerNumber)
+    {
+        if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
+        _usingShortTick = false;
     }
 
     private void Update()
     {
         UpdateTetrominoTimers();
-    }
-
-    private void UpdateTetrominoTimers()
-    {
-        UpdateDefaultTick();
-
-        if (_usingShortTick)
-        {
-            UpdateShortTick();
-        }
-    }
-
-    private void UpdateShortTick()
-    {
-        if (_timeUntilShortTick > 0)
-        {
-            _timeUntilShortTick -= Time.deltaTime;
-        }
-        else
-        {
-            ShortTick();
-            _timeUntilShortTick = _shortTickDelay;
-        }
-    }
-
-    private void UpdateDefaultTick()
-    {
-        if (_timeUntilDefaultTick > 0)
-        {
-            _timeUntilDefaultTick -= Time.deltaTime;
-        }
-        else
-        {
-            DefaultTick();
-            _timeUntilDefaultTick = _defaultTickDelay;
-        }
-    }
-
-    private void DefaultTick()
-    {
-        MoveActiveTetrominoesDown();
-        OnTetrominoTick?.Invoke(this, EventArgs.Empty); // consider removing this event
-    }
-
-    private void ShortTick()
-    {
-        MoveHighlightedTetrominoDown();
     }
 
     internal Box GetDeactivatedBox()
@@ -169,6 +133,8 @@ public class GameBoard : MonoBehaviour
             HighlightLowestFallingTetromino();
         }
 
+        InputManager.SwapTetrominoPlayer();
+
         _staticTetrominoes.Add(tetromino);
 
         // Check the modified rows and remove them if they are filled up
@@ -176,6 +142,53 @@ public class GameBoard : MonoBehaviour
         {
             if (RowIsFull(yPos)) { RemoveRow(yPos); }
         }
+    }
+
+    private void UpdateTetrominoTimers()
+    {
+        UpdateDefaultTick();
+
+        if (_usingShortTick)
+        {
+            UpdateShortTick();
+        }
+    }
+
+    private void UpdateShortTick()
+    {
+        if (_timeUntilShortTick > 0)
+        {
+            _timeUntilShortTick -= Time.deltaTime;
+        }
+        else
+        {
+            ShortTick();
+            _timeUntilShortTick = _shortTickDelay;
+        }
+    }
+
+    private void UpdateDefaultTick()
+    {
+        if (_timeUntilDefaultTick > 0)
+        {
+            _timeUntilDefaultTick -= Time.deltaTime;
+        }
+        else
+        {
+            DefaultTick();
+            _timeUntilDefaultTick = _defaultTickDelay;
+        }
+    }
+
+    private void DefaultTick()
+    {
+        MoveActiveTetrominoesDown();
+        OnTetrominoTick?.Invoke(this, EventArgs.Empty); // consider removing this event
+    }
+
+    private void ShortTick()
+    {
+        MoveHighlightedTetrominoDown();
     }
 
     private void MakeTetrominoFalling(Tetromino tetromino)
@@ -206,6 +219,7 @@ public class GameBoard : MonoBehaviour
             _highlightedTetromino = null;
         }
 
+        _usingShortTick = false;
         tetromino.SetHighlight(highlight);
     }
 

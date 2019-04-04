@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    internal static int TetrominoPlayerNumber { get; private set; } = 1;
+
     internal static event EventHandler<int> OnUpDirectionPressed;
     internal static event EventHandler<int> OnLeftDirectionPressed;
     internal static event EventHandler<int> OnDownDirectionPressed;
@@ -49,6 +51,12 @@ public class InputManager : MonoBehaviour
                 _playerIsPressingInputAction[(config, action)] = InputActionBeingPressed(config, action);
             }
         }
+    }
+
+    // Doesn't support more than 2 players (like the rest of this class)
+    internal static void SwapTetrominoPlayer()
+    {
+        TetrominoPlayerNumber = TetrominoPlayerNumber == 1 ? 2 : 1;
     }
 
     private bool InputActionBeingPressed(PlayerInputKeyConfig config, PlayerInputAction action)
@@ -113,7 +121,6 @@ public class InputManager : MonoBehaviour
         switch (action)
         {
             case PlayerInputAction.Down: OnDownDirectionReleased?.Invoke(this, playerNumber); return;
-
             // Add more events here later.
         }
     }
