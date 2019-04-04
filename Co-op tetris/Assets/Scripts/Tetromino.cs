@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using UnityEngine;
 
+// TODO: Remake this whole script to accept multiple directions to move in
 public class Tetromino : MonoBehaviour
 {
     internal bool IsHighlighted { get; private set; }
@@ -9,14 +10,14 @@ public class Tetromino : MonoBehaviour
     private TetrominoShape _tetrominoShape;
     private GameBoard _gameBoard;
 
-    private Box[] _boxesToCollisionCheck;
+    private Box[] _bottomBoxes;
     private Box[] _boxes;
 
     internal void Initialize(GameBoard gameBoard)
     {
         _gameBoard = gameBoard;
 
-        RemoveAllChildren();
+        RemoveAllChildBoxes();
         GenerateNewShape();
         GetAndPlaceNewBoxes();
         RecalculateBoxes();
@@ -64,14 +65,24 @@ public class Tetromino : MonoBehaviour
         transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
     }
 
+    private bool CanMoveInDirection(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Down:
+                return CanMoveDown();
+
+            default:
+                throw new System.Exception($"Direction '{direction.ToString()}' not implemented");
+        }
+    }
+
     private bool CanMoveDown()
     {
-        foreach (var box in _boxesToCollisionCheck)
+        foreach (var box in _bottomBoxes)
         {
             if (!box.CanMoveDown)
             {
-                // Important for performance, but currently removes
-                // a gameplay mechanic (read more over GameBoard.MakeTetrominoStatic)
                 _gameBoard.MakeTetrominoStatic(this);
                 return false;
             }
@@ -83,7 +94,7 @@ public class Tetromino : MonoBehaviour
     private void RecalculateBoxes()
     {
         _boxes = GetAllChildBoxes();
-        _boxesToCollisionCheck = GetBoxesToCollisionCheck(_boxes);
+        _bottomBoxes = GetBoxesToCollisionCheck(_boxes);
     }
 
     private void GenerateNewShape()
@@ -115,8 +126,8 @@ public class Tetromino : MonoBehaviour
     /// that does not have another box (from the <paramref name="allBoxes"/> array) directly under it.
     /// </summary>
     private Box[] GetBoxesToCollisionCheck(Box[] allBoxes)
+    // Yes, a bit messy. But this is my sweet little baby, and she's fully functional.
     {
-        // Yes, a bit messy. But this is my sweet little baby, and she's fully functional.
         Box[] boxesToCollisionCheck = allBoxes
             .Where(a => !allBoxes
                    .Any(b => (int) b.transform.localPosition.x == (int) a.transform.localPosition.x
@@ -126,10 +137,11 @@ public class Tetromino : MonoBehaviour
         return boxesToCollisionCheck;
     }
 
-    private void RemoveAllChildren()
+    private void RemoveAllChildBoxes()
     {
         while (transform.childCount != 0)
         {
+            // Since AddBoxToPool unchilds the box, this will iterate through all children.
             _gameBoard.AddBoxToPool(transform.GetChild(0).GetComponent<Box>());
         }
     }
@@ -142,9 +154,7 @@ public class Tetromino : MonoBehaviour
             {
                 var letter = _tetrominoShape.Shape[y, x];
                 if (letter == ' ') { continue; }
-
-                var box = _gameBoard.GetDeactivatedBox();
-                box.Activate(transform, new Vector2(x, -y), letter);
+                _gameBoard.GetDeactivatedBox().Activate(transform, new Vector2(x, -y), letter);
             }
         }
     }

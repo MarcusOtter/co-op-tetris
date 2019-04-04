@@ -20,6 +20,12 @@ public class Box : MonoBehaviour
     internal bool CanMoveDown
         => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x, (int) transform.position.y - 1));
 
+    internal bool CanMoveRight
+        => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x + 1, (int) transform.position.y));
+
+    internal bool CanMoveLeft
+        => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x - 1, (int) transform.position.y));
+
     internal void Activate(Transform parentTetromino, Vector2 localPosition, char colorLetter)
     {
         transform.SetParent(parentTetromino);

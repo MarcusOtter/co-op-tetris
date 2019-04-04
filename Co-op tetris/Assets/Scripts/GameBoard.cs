@@ -330,9 +330,9 @@ public class GameBoard : MonoBehaviour
         }
     }
 
-    //private void OnDisable()
-    //{
-    //    InputManager.OnDownDirectionPressed -= ActivateShortTick;
-    //    InputManager.OnDownDirectionReleased -= ActivateSlowTick;
-    //}
+    private void OnDisable()
+    {
+        InputManager.OnDownDirectionPressed -= HandleOnDownDirectionPressed;
+        InputManager.OnDownDirectionReleased -= HandleOnDownDirectionReleased;
+    }
 }
