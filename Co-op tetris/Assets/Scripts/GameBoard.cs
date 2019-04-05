@@ -42,6 +42,21 @@ public class GameBoard : MonoBehaviour
     {
         InputManager.OnDownDirectionPressed += HandleOnDownDirectionPressed;
         InputManager.OnDownDirectionReleased += HandleOnDownDirectionReleased;
+
+        InputManager.OnLeftDirectionPressed += HandleOnLeftDirectionPressed;
+        InputManager.OnRightDirectionPressed += HandleOnRightDirectionPressed;
+    }
+
+    private void HandleOnRightDirectionPressed(object sender, int playerNumber)
+    {
+        if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
+        _highlightedTetromino?.AttemptToMoveInDirection(Direction.Right);
+    }
+
+    private void HandleOnLeftDirectionPressed(object sender, int playerNumber)
+    {
+        if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
+        _highlightedTetromino?.AttemptToMoveInDirection(Direction.Left);
     }
 
     private void HandleOnDownDirectionPressed(object sender, int playerNumber)
@@ -306,7 +321,7 @@ public class GameBoard : MonoBehaviour
 
     private void MoveHighlightedTetrominoDown()
     {
-        _highlightedTetromino?.AttemptDescent();
+        _highlightedTetromino?.AttemptToMoveInDirection(Direction.Down);
     }
 
     private void MoveActiveTetrominoesDown()
@@ -316,7 +331,7 @@ public class GameBoard : MonoBehaviour
             // Prevents double ticks on the highlighted tetromino while using short ticks too
             if (tetromino.IsHighlighted && _usingShortTick) { continue;  }
 
-            tetromino.AttemptDescent();
+            tetromino.AttemptToMoveInDirection(Direction.Down);
         }
     }
 
@@ -334,5 +349,8 @@ public class GameBoard : MonoBehaviour
     {
         InputManager.OnDownDirectionPressed -= HandleOnDownDirectionPressed;
         InputManager.OnDownDirectionReleased -= HandleOnDownDirectionReleased;
+
+        InputManager.OnLeftDirectionPressed -= HandleOnLeftDirectionPressed;
+        InputManager.OnRightDirectionPressed -= HandleOnRightDirectionPressed;
     }
 }

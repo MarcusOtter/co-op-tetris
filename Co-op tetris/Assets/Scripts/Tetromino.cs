@@ -1,17 +1,18 @@
 ﻿using System.Linq;
 using UnityEngine;
 
-// TODO: Remake this whole script to accept multiple directions to move in
 public class Tetromino : MonoBehaviour
 {
     internal bool IsHighlighted { get; private set; }
-    internal int BoxAmount => _boxes.Length;
+    internal int BoxAmount => _allBoxes.Length;
 
     private TetrominoShape _tetrominoShape;
     private GameBoard _gameBoard;
 
     private Box[] _bottomBoxes;
-    private Box[] _boxes;
+    private Box[] _leftmostBoxes;
+    private Box[] _rightmostBoxes;
+    private Box[] _allBoxes;
 
     internal void Initialize(GameBoard gameBoard)
     {
@@ -25,11 +26,11 @@ public class Tetromino : MonoBehaviour
 
     internal int[] GetUniqueBoxYPositions()
     {
-        int[] yPositions = new int[_boxes.Length];
+        int[] yPositions = new int[_allBoxes.Length];
 
-        for (int i = 0; i < _boxes.Length; i++)
+        for (int i = 0; i < _allBoxes.Length; i++)
         {
-            yPositions[i] = (int) _boxes[i].transform.position.y;
+            yPositions[i] = (int) _allBoxes[i].transform.position.y;
         }
 
         return yPositions.Distinct().OrderBy(x => x).ToArray();
@@ -37,7 +38,7 @@ public class Tetromino : MonoBehaviour
 
     internal void RemoveBoxesWithYPosition(int yPosition)
     {
-        Box[] matchingBoxes = _boxes.Where(x => (int) x.transform.position.y == yPosition).ToArray();
+        Box[] matchingBoxes = _allBoxes.Where(x => (int) x.transform.position.y == yPosition).ToArray();
 
         if (matchingBoxes.Length == 0) { return; }
 
@@ -51,7 +52,7 @@ public class Tetromino : MonoBehaviour
 
     internal void SetHighlight(bool highlight)
     {
-        foreach (var box in _boxes)
+        foreach (var box in _allBoxes)
         {
             box.HighlightBox(highlight);
         }
@@ -59,31 +60,36 @@ public class Tetromino : MonoBehaviour
         IsHighlighted = highlight;
     }
 
-    internal void AttemptDescent()
+    internal void AttemptToMoveInDirection(Direction direction)
     {
-        if (!CanMoveDown()) { return; }
-        transform.position = new Vector3(transform.position.x, transform.position.y - 1, 0);
+        if (!CanMoveInDirection(direction)) { return; }
+
+        switch (direction)
+        {
+            case Direction.Down:  transform.position += Vector3.down;  return;
+            case Direction.Left:  transform.position += Vector3.left;  return;
+            case Direction.Right: transform.position += Vector3.right; return;
+        }
     }
 
     private bool CanMoveInDirection(Direction direction)
     {
+        Box[] boxesToCollisionCheck;
+
         switch (direction)
         {
-            case Direction.Down:
-                return CanMoveDown();
+            case Direction.Down:  boxesToCollisionCheck = _bottomBoxes;    break;
+            case Direction.Left:  boxesToCollisionCheck = _leftmostBoxes;  break;
+            case Direction.Right: boxesToCollisionCheck = _rightmostBoxes; break;
 
-            default:
-                throw new System.Exception($"Direction '{direction.ToString()}' not implemented");
+            default: throw new System.Exception($"Direction '{direction.ToString()}' not implemented");
         }
-    }
 
-    private bool CanMoveDown()
-    {
-        foreach (var box in _bottomBoxes)
+        foreach (var box in boxesToCollisionCheck)
         {
-            if (!box.CanMoveDown)
+            if (!box.CanMoveInDirection(direction))
             {
-                _gameBoard.MakeTetrominoStatic(this);
+                if (direction == Direction.Down) { _gameBoard.MakeTetrominoStatic(this); }
                 return false;
             }
         }
@@ -93,8 +99,11 @@ public class Tetromino : MonoBehaviour
 
     private void RecalculateBoxes()
     {
-        _boxes = GetAllChildBoxes();
-        _bottomBoxes = GetBoxesToCollisionCheck(_boxes);
+        _allBoxes = GetAllChildBoxes();
+
+        _bottomBoxes =    GetBoxesToCollisionCheck(_allBoxes, Direction.Down);
+        _leftmostBoxes =  GetBoxesToCollisionCheck(_allBoxes, Direction.Left);
+        _rightmostBoxes = GetBoxesToCollisionCheck(_allBoxes, Direction.Right);
     }
 
     private void GenerateNewShape()
@@ -123,18 +132,32 @@ public class Tetromino : MonoBehaviour
 
     /// <summary>
     /// Returns an array of the boxes from <paramref name="allBoxes"/>
-    /// that does not have another box (from the <paramref name="allBoxes"/> array) directly under it.
+    /// that does not have another box (from the array) directly next to it in the direction given.
     /// </summary>
-    private Box[] GetBoxesToCollisionCheck(Box[] allBoxes)
-    // Yes, a bit messy. But this is my sweet little baby, and she's fully functional.
+    private Box[] GetBoxesToCollisionCheck(Box[] allBoxes, Direction direction)
     {
-        Box[] boxesToCollisionCheck = allBoxes
-            .Where(a => !allBoxes
-                   .Any(b => (int) b.transform.localPosition.x == (int) a.transform.localPosition.x
-                          && (int) b.transform.localPosition.y == (int) a.transform.localPosition.y - 1))
-            .ToArray();
+        switch (direction)
+        {
+            case Direction.Down:
+                return allBoxes
+                    .Where(a => !allBoxes
+                           .Any(b => (int) b.transform.localPosition.x == (int) a.transform.localPosition.x
+                                  && (int) b.transform.localPosition.y == (int) a.transform.localPosition.y - 1)).ToArray();
 
-        return boxesToCollisionCheck;
+            case Direction.Left:
+                return allBoxes
+                    .Where(a => !allBoxes
+                           .Any(b => (int) b.transform.localPosition.y == (int) a.transform.localPosition.y
+                                  && (int) b.transform.localPosition.x == (int) a.transform.localPosition.x - 1)).ToArray();
+
+            case Direction.Right:
+                return allBoxes
+                    .Where(a => !allBoxes
+                           .Any(b => (int) b.transform.localPosition.y == (int) a.transform.localPosition.y
+                                  && (int) b.transform.localPosition.x == (int) a.transform.localPosition.x + 1)).ToArray();
+
+            default: throw new System.Exception($"Direction '{direction.ToString()}' not implemented");
+        }
     }
 
     private void RemoveAllChildBoxes()

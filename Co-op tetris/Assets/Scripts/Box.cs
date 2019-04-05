@@ -17,14 +17,22 @@ public class Box : MonoBehaviour
         _gameBoard = gameBoard;
     }
 
-    internal bool CanMoveDown
-        => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x, (int) transform.position.y - 1));
+    internal bool CanMoveInDirection(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Down:
+                return !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x, (int) transform.position.y - 1));
 
-    internal bool CanMoveRight
-        => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x + 1, (int) transform.position.y));
+            case Direction.Left:
+                return !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x - 1, (int) transform.position.y));
 
-    internal bool CanMoveLeft
-        => !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x - 1, (int) transform.position.y));
+            case Direction.Right:
+                return !_gameBoard.TileIsOccupied(new Vector2Int((int) transform.position.x + 1, (int) transform.position.y));
+
+            default: throw new System.Exception($"Direction '{direction}' is not implemented.");
+        }
+    }
 
     internal void Activate(Transform parentTetromino, Vector2 localPosition, char colorLetter)
     {
