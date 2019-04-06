@@ -72,6 +72,14 @@ public class Tetromino : MonoBehaviour
         }
     }
 
+    // This is how a rotated shape would be gotten I think (check GetTetrominoShape),
+    // then you have to check if any of the positions are occupied, disregarding the boxes of this tetromino.
+    // The positions would be checked the same way they're checked in GetAndPlaceNewBoxes();
+    // private void Rotate(int degrees)
+    // {
+    //     var newShape = TetrominoShapeHelper.GetTetrominoShape(_tetrominoShape.Letter, _tetrominoShape.Rotation + degrees);
+    // }
+
     private bool CanMoveInDirection(Direction direction)
     {
         Box[] boxesToCollisionCheck;
@@ -101,8 +109,8 @@ public class Tetromino : MonoBehaviour
     {
         _allBoxes = GetAllChildBoxes();
 
-        _bottomBoxes =    GetBoxesToCollisionCheck(_allBoxes, Direction.Down);
-        _leftmostBoxes =  GetBoxesToCollisionCheck(_allBoxes, Direction.Left);
+        _bottomBoxes    = GetBoxesToCollisionCheck(_allBoxes, Direction.Down);
+        _leftmostBoxes  = GetBoxesToCollisionCheck(_allBoxes, Direction.Left);
         _rightmostBoxes = GetBoxesToCollisionCheck(_allBoxes, Direction.Right);
     }
 

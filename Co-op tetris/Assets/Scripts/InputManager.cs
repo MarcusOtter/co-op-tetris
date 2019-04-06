@@ -6,6 +6,9 @@ public class InputManager : MonoBehaviour
 {
     internal static int TetrominoPlayerNumber { get; private set; } = 1;
 
+    internal static event EventHandler<PlayerInputEventArgs> OnPlayerInput;
+
+    /*
     internal static event EventHandler<int> OnUpDirectionPressed;
     internal static event EventHandler<int> OnLeftDirectionPressed;
     internal static event EventHandler<int> OnDownDirectionPressed;
@@ -16,6 +19,7 @@ public class InputManager : MonoBehaviour
     internal static event EventHandler<int> OnAction1ButtonPressed;
     internal static event EventHandler<int> OnAction2ButtonPressed;
     internal static event EventHandler<int> OnAction3ButtonPressed;
+    */
 
     [Header("Input configurations")]
     [SerializeField] private PlayerInputKeyConfig[] _inputConfigs;
@@ -91,18 +95,22 @@ public class InputManager : MonoBehaviour
 
         if (!wasPressedLastFrame && beingPressed)
         {
-            CallOnPressedEvent(config.PlayerNumber, action);
+            OnPlayerInput?.Invoke(this, new PlayerInputEventArgs(config.PlayerNumber, InputState.Pressed, action));
+            //InvokeOnPlayerInput(config.PlayerNumber, action);
         }
         else if (wasPressedLastFrame && !beingPressed)
         {
-            CallOnReleasedEvent(config.PlayerNumber, action);
+            OnPlayerInput?.Invoke(this, new PlayerInputEventArgs(config.PlayerNumber, InputState.Released, action));
+            //CallOnReleasedEvent(config.PlayerNumber, action);
         }
 
         return beingPressed;
     }
 
-    private void CallOnPressedEvent(int playerNumber, PlayerInputAction action)
+    private void InvokeOnPlayerInput(int playerNumber, PlayerInputAction action)
     {
+
+        /*
         switch (action)
         {
             case PlayerInputAction.Action1: OnAction1ButtonPressed? .Invoke(this, playerNumber); return;
@@ -114,14 +122,15 @@ public class InputManager : MonoBehaviour
             case PlayerInputAction.Down:    OnDownDirectionPressed? .Invoke(this, playerNumber); return;
             case PlayerInputAction.Right:   OnRightDirectionPressed?.Invoke(this, playerNumber); return;
         }
+        */
     }
 
-    private void CallOnReleasedEvent(int playerNumber, PlayerInputAction action)
-    {
-        switch (action)
-        {
-            case PlayerInputAction.Down: OnDownDirectionReleased?.Invoke(this, playerNumber); return;
-            // Add more events here later.
-        }
-    }
+    //private void CallOnReleasedEvent(int playerNumber, PlayerInputAction action)
+    //{
+    //    switch (action)
+    //    {
+    //        case PlayerInputAction.Down: OnDownDirectionReleased?.Invoke(this, playerNumber); return;
+    //        // Add more events here later.
+    //    }
+    //}
 }
