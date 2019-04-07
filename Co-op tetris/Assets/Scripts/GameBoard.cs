@@ -40,72 +40,8 @@ public class GameBoard : MonoBehaviour
 
     private void OnEnable()
     {
-        //InputManager.OnDownDirectionPressed += HandleOnDownDirectionPressed;
-        //InputManager.OnDownDirectionReleased += HandleOnDownDirectionReleased;
-
-        //InputManager.OnLeftDirectionPressed += HandleOnLeftDirectionPressed;
-        //InputManager.OnRightDirectionPressed += HandleOnRightDirectionPressed;
-
         InputManager.OnPlayerInput += HandlePlayerInput;
     }
-
-    // TODO: refactor
-    private void HandlePlayerInput(object sender, PlayerInputEventArgs eventArgs)
-    {
-        if (eventArgs.PlayerNumber != InputManager.TetrominoPlayerNumber) { return; }
-
-        if (eventArgs.InputState == InputState.Pressed)
-        {
-            switch (eventArgs.InputAction)
-            {
-                case PlayerInputAction.Right:
-                    _highlightedTetromino?.AttemptToMoveInDirection(Direction.Right);
-                    break;
-
-                case PlayerInputAction.Left:
-                    _highlightedTetromino?.AttemptToMoveInDirection(Direction.Left);
-                    break;
-
-                case PlayerInputAction.Down:
-                    _usingShortTick = true;
-                    break;
-
-            }
-        }
-        else if (eventArgs.InputState == InputState.Released)
-        {
-            switch (eventArgs.InputAction)
-            {
-                case PlayerInputAction.Down:
-                    _usingShortTick = false;
-                    break;
-            }
-        }
-    }
-
-    //private void HandleOnRightDirectionPressed(object sender, int playerNumber)
-    //{
-    //    if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
-    //    _highlightedTetromino?.AttemptToMoveInDirection(Direction.Right);
-    //}
-
-    //private void HandleOnLeftDirectionPressed(object sender, int playerNumber)
-    //{
-    //    if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
-    //    _highlightedTetromino?.AttemptToMoveInDirection(Direction.Left);
-    //}
-
-    //private void HandleOnDownDirectionPressed(object sender, int playerNumber)
-    //{
-    //    if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
-    //    _usingShortTick = true;
-    //}
-
-    //private void HandleOnDownDirectionReleased(object sender, int playerNumber)
-    //{
-    //    if (playerNumber != InputManager.TetrominoPlayerNumber) { return; }
-    //    _usingShortTick = false;
-    //}
 
     private void Update()
     {
@@ -192,6 +128,48 @@ public class GameBoard : MonoBehaviour
         foreach(int yPos in tetromino.GetUniqueBoxYPositions())
         {
             if (RowIsFull(yPos)) { RemoveRow(yPos); }
+        }
+    }
+
+    private void HandlePlayerInput(object sender, PlayerInputEventArgs eventArgs)
+    {
+        if (eventArgs.PlayerNumber != InputManager.TetrominoPlayerNumber) { return; }
+
+        if (eventArgs.InputState == InputState.Pressed)
+        {
+            HandleInputPressed(eventArgs.InputAction);
+        }
+        else if (eventArgs.InputState == InputState.Released)
+        {
+            HandleInputReleased(eventArgs.InputAction);
+        }
+    }
+
+    private void HandleInputPressed(PlayerInputAction action)
+    {
+        switch (action)
+        {
+            case PlayerInputAction.Right:
+                _highlightedTetromino?.AttemptToMoveInDirection(Direction.Right);
+                break;
+
+            case PlayerInputAction.Left:
+                _highlightedTetromino?.AttemptToMoveInDirection(Direction.Left);
+                break;
+
+            case PlayerInputAction.Down:
+                _usingShortTick = true;
+                break;
+        }
+    }
+
+    private void HandleInputReleased(PlayerInputAction action)
+    {
+        switch (action)
+        {
+            case PlayerInputAction.Down:
+                _usingShortTick = false;
+                break;
         }
     }
 
@@ -383,11 +361,6 @@ public class GameBoard : MonoBehaviour
 
     private void OnDisable()
     {
-        //InputManager.OnDownDirectionPressed -= HandleOnDownDirectionPressed;
-        //InputManager.OnDownDirectionReleased -= HandleOnDownDirectionReleased;
-
-        //InputManager.OnLeftDirectionPressed -= HandleOnLeftDirectionPressed;
-        //InputManager.OnRightDirectionPressed -= HandleOnRightDirectionPressed;
         InputManager.OnPlayerInput -= HandlePlayerInput;
     }
 }
