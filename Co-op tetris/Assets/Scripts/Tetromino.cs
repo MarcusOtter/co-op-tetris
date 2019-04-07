@@ -33,7 +33,7 @@ public class Tetromino : MonoBehaviour
             yPositions[i] = (int) _allBoxes[i].transform.position.y;
         }
 
-        return yPositions.Distinct().OrderBy(x => x).ToArray();
+        return yPositions.Distinct().ToArray();
     }
 
     internal void RemoveBoxesWithYPosition(int yPosition)

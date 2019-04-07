@@ -127,11 +127,8 @@ public class GameBoard : MonoBehaviour
 
         _staticTetrominoes.Add(tetromino);
 
-        // Check the modified rows and remove them if they are filled up
-        foreach(int yPos in tetromino.GetUniqueBoxYPositions())
-        {
-            if (RowIsFull(yPos)) { RemoveRow(yPos); }
-        }
+        var fullRows = tetromino.GetUniqueBoxYPositions().Where(x => RowIsFull(x)).ToArray();
+        RemoveRows(fullRows);
     }
 
     private void HandlePlayerInput(object sender, PlayerInputEventArgs eventArgs)
@@ -269,40 +266,35 @@ public class GameBoard : MonoBehaviour
             .Count() == fullRowBoxAmount;
     }
 
-    private void RemoveRow(int yPosition)
+    private void RemoveRows(int[] yPositions)
     {
-        foreach (var tetromino in _fallingTetrominoes)
+        if (yPositions.Length == 0) { return; }
+
+        yPositions = yPositions.OrderBy(x => x).ToArray();
+
+        foreach (int yPosition in yPositions)
         {
-            tetromino.RemoveBoxesWithYPosition(yPosition);
+            // Is this loop really needed?
+            //foreach (var tetromino in _fallingTetrominoes)
+            //{
+            //    tetromino.RemoveBoxesWithYPosition(yPosition);
+            //}
+
+            foreach (var tetromino in _staticTetrominoes)
+            {
+                tetromino.RemoveBoxesWithYPosition(yPosition);
+            }
         }
 
-        foreach (var tetromino in _staticTetrominoes)
-        {
-            tetromino.RemoveBoxesWithYPosition(yPosition);
-        }
-
-        // TODO: Remake (Issue #22 on GitHub)
-        var boxesToSetFalling = _enabledBoxes
-            .Where(x => x.transform.position.y >= yPosition)
+        var boxesToShift = _enabledBoxes
+            .Where(x => x.transform.position.y > yPositions.Last())
             .OrderBy(x => x.transform.position.y)
             .ToArray();
 
-        foreach (var box in boxesToSetFalling)
+        foreach (var box in boxesToShift)
         {
-            MakeTetrominoFalling(box.ParentTetromino);
+            box.transform.position += Vector3.down * yPositions.Length;
         }
-
-        // TODO: Should be extracted to separate method to shift boxes down
-        //var boxesToShift = _enabledBoxes
-        //    .Where(x => x.transform.position.y > yPosition)
-        //    .OrderBy(x => x.transform.position.y)
-        //    .ToArray();
-
-        //foreach (var box in boxesToShift)
-        //{
-        //    box.transform.position 
-        //        = new Vector3(box.transform.position.x, box.transform.position.y - 1, 0);
-        //}
 
         ClearEmptyTetrominoes();
     }
