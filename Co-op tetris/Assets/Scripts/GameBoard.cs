@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
 public class GameBoard : MonoBehaviour
 {
-    // For tetromino generator and (eventually) points.
-    internal static event EventHandler OnTetrominoTick; // consider removing this event
-
     [Header("Prefab references")]
     [SerializeField] private Box _boxPrefab;
 
@@ -33,6 +29,8 @@ public class GameBoard : MonoBehaviour
     private float _timeUntilDefaultTick;
     private float _timeUntilShortTick;
 
+    private TetrominoGenerator _tetrominoGenerator;
+
     private void Awake()
     {
         IncreasePoolCapacity(256);
@@ -41,6 +39,11 @@ public class GameBoard : MonoBehaviour
     private void OnEnable()
     {
         InputManager.OnPlayerInput += HandlePlayerInput;
+    }
+
+    private void Start()
+    {
+        _tetrominoGenerator = FindObjectOfType<TetrominoGenerator>();
     }
 
     private void Update()
@@ -212,7 +215,7 @@ public class GameBoard : MonoBehaviour
     private void DefaultTick()
     {
         MoveActiveTetrominoesDown();
-        OnTetrominoTick?.Invoke(this, EventArgs.Empty); // consider removing this event
+        _tetrominoGenerator.CountTick();
     }
 
     private void ShortTick()

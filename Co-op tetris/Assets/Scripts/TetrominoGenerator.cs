@@ -16,18 +16,13 @@ public class TetrominoGenerator : MonoBehaviour
     private int _maxSpawnPositionX;
     private int _spawnPositionY;
 
-    private void OnEnable()
-    {
-        GameBoard.OnTetrominoTick += CountTick;
-    }
-
     private void Start()
     {
         _gameBoard = FindObjectOfType<GameBoard>();
         SetSpawnPositions();
     }
 
-    private void CountTick(object sender, System.EventArgs e)
+    internal void CountTick()
     {
         _tickCount++;
     }
@@ -61,10 +56,5 @@ public class TetrominoGenerator : MonoBehaviour
         _minSpawnPositionX = _gameBoard.LeftBoundX + 1;
         _maxSpawnPositionX = _gameBoard.RightBoundX - 4;
         _spawnPositionY = _gameBoard.UpperBoundY + 4;
-    }
-
-    private void OnDisable()
-    {
-        GameBoard.OnTetrominoTick -= CountTick;
     }
 }
