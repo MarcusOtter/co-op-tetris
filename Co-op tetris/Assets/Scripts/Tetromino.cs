@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Tetromino : MonoBehaviour
@@ -19,6 +20,7 @@ public class Tetromino : MonoBehaviour
         _gameBoard = gameBoard;
 
         RemoveAllChildBoxes();
+
         GenerateNewShape();
         GetAndPlaceNewBoxes();
         RecalculateBoxes();
@@ -52,6 +54,8 @@ public class Tetromino : MonoBehaviour
 
     internal void SetHighlight(bool highlight)
     {
+        if (_allBoxes == null || !_allBoxes.Any()) { return; }
+
         foreach (var box in _allBoxes)
         {
             box.HighlightBox(highlight);
@@ -72,13 +76,45 @@ public class Tetromino : MonoBehaviour
         }
     }
 
-    // This is how a rotated shape would be gotten I think (check GetTetrominoShape),
-    // then you have to check if any of the positions are occupied, disregarding the boxes of this tetromino.
-    // The positions would be checked the same way they're checked in GetAndPlaceNewBoxes();
-    // private void Rotate(int degrees)
-    // {
-    //     var newShape = TetrominoShapeHelper.GetTetrominoShape(_tetrominoShape.Letter, _tetrominoShape.Rotation + degrees);
-    // }
+    // TODO: Fix bug where tetrominoes will teleport up depending on how many rows
+    // have been deleted (since boxes move down). Perhaps have a counter for every row that is
+    // removed and then subtract that from the Y pos.
+    // ^^
+    // Also refresh memory on why boxes are moved instead of the tetrominoes in the first place..
+    internal void AttemptToRotate(int degrees)
+    {
+        var newShape = TetrominoShapeHelper.RotateShape(_tetrominoShape, degrees);
+        var positionsToCheck = new List<Vector2Int>();
+
+        for (int y = 0; y < 4; y++)
+        {
+            for (int x = 0; x < 4; x++)
+            {
+                var letter = newShape.Shape[y, x];
+                if (letter == ' ') { continue; }
+
+                var worldPositionToCheck = transform.TransformPoint(new Vector2(x, -y));
+
+                // If this position is already occupied by a box of this tetromino, it is available.
+                if (_allBoxes.Any(box => box.transform.position == worldPositionToCheck)) { continue; }
+
+                positionsToCheck.Add(new Vector2Int((int) worldPositionToCheck.x, (int) worldPositionToCheck.y));
+            }
+        }
+
+        if (!positionsToCheck.Any()) { return; }
+
+        foreach (var position in positionsToCheck)
+        {
+            if (_gameBoard.TileIsOccupied(position)) { return; }
+        }
+
+        RemoveAllChildBoxes();
+        _tetrominoShape = newShape;
+        GetAndPlaceNewBoxes();
+        RecalculateBoxes();
+        SetHighlight(true);
+    }
 
     private bool CanMoveInDirection(Direction direction)
     {
@@ -168,8 +204,12 @@ public class Tetromino : MonoBehaviour
         }
     }
 
+    // Can probably loop through _allBoxes instead of the children and get the components again
+    // though this is a bit safer (and since this method is rarely called, it's fine)
     private void RemoveAllChildBoxes()
     {
+        SetHighlight(false);
+
         while (transform.childCount != 0)
         {
             // Since AddBoxToPool unchilds the box, this will iterate through all children.

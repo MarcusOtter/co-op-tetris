@@ -160,6 +160,14 @@ public class GameBoard : MonoBehaviour
             case PlayerInputAction.Down:
                 _usingShortTick = true;
                 break;
+
+            case PlayerInputAction.Action1:
+                _highlightedTetromino?.AttemptToRotate(-90);
+                break;
+
+            case PlayerInputAction.Action3:
+                _highlightedTetromino?.AttemptToRotate(90);
+                break;
         }
     }
 

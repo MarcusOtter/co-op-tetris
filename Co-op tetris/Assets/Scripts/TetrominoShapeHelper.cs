@@ -52,7 +52,7 @@ public static class TetrominoShapeHelper
 
     private static char[,] GetShape(char letter, int rotation)
     {
-        return _allShapes[(letter, rotation)];
+        return _allShapes[(letter, GetValidRotation(rotation))];
     }
 
     private static int GetRandomRotation()
@@ -272,15 +272,15 @@ public static class TetrominoShapeHelper
         {
             { ' ', ' ', ' ', ' ' },
             { ' ', ' ', ' ', ' ' },
-            { 'P', 'P', 'P', ' ' },
-            { ' ', 'P', ' ', ' ' }
+            { ' ', 'P', ' ', ' ' },
+            { 'P', 'P', 'P', ' ' }
         }},
         {('T', 270), new char[,]
         {
             { ' ', ' ', ' ', ' ' },
-            { ' ', ' ', 'P', ' ' },
+            { ' ', 'P', ' ', ' ' },
             { ' ', 'P', 'P', ' ' },
-            { ' ', ' ', 'P', ' ' }
+            { ' ', 'P', ' ', ' ' }
         }},
         #endregion
     };
