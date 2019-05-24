@@ -52,13 +52,13 @@ public class Tetromino : MonoBehaviour
         RecalculateBoxes();
     }
 
-    internal void SetHighlight(bool highlight)
+    internal void SetHighlight(bool highlight, Color color = default)
     {
         if (_allBoxes == null || !_allBoxes.Any()) { return; }
 
         foreach (var box in _allBoxes)
         {
-            box.HighlightBox(highlight);
+            box.HighlightBox(highlight, color);
         }
 
         IsHighlighted = highlight;
@@ -113,7 +113,7 @@ public class Tetromino : MonoBehaviour
         _tetrominoShape = newShape;
         GetAndPlaceNewBoxes();
         RecalculateBoxes();
-        SetHighlight(true);
+        SetHighlight(true, _gameBoard.GetOutlineColor());
     }
 
     private bool CanMoveInDirection(Direction direction)

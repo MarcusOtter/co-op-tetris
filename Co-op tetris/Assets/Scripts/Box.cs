@@ -9,11 +9,13 @@ public class Box : MonoBehaviour
 
     private GameBoard _gameBoard;
 
+    private SpriteRenderer _outlineSpriteRenderer;
     private SpriteRenderer _spriteRenderer;
 
     internal void Initialize(GameBoard gameBoard)
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        _outlineSpriteRenderer = _outlineObject.GetComponent<SpriteRenderer>();
         _gameBoard = gameBoard;
     }
 
@@ -52,8 +54,13 @@ public class Box : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    internal void HighlightBox(bool highlight)
+    internal void HighlightBox(bool highlight, Color color = default)
     {
+        if (color != default)
+        {
+            _outlineSpriteRenderer.color = color;
+        }
+
         _outlineObject.SetActive(highlight);
         _spriteRenderer.sortingLayerName = highlight ? "Selected Box" : "Default";
     }

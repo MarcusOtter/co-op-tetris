@@ -13,6 +13,10 @@ public class GameBoard : MonoBehaviour
     [SerializeField] internal int UpperBoundY = 23;
     [SerializeField] internal int BottomBoundY = 1;
     
+    [Header("Player colors")]
+    [SerializeField] private Color _player1Color;
+    [SerializeField] private Color _player2Color;
+
     [Header("Fall speed")]
     [SerializeField] private float _defaultTickDelay = 1f;
     [SerializeField] private float _shortTickDelay = 0.05f;
@@ -100,10 +104,21 @@ public class GameBoard : MonoBehaviour
     {
         if (!_fallingTetrominoes.Any())
         {
-            HighlightTetromino(tetromino, true);
+            HighlightTetromino(tetromino, true, GetOutlineColor());
         }
 
         MakeTetrominoFalling(tetromino);
+    }
+
+    internal Color GetOutlineColor()
+    {
+        switch (InputManager.TetrominoPlayerNumber)
+        {
+            case 1: return _player1Color;
+            case 2: return _player2Color;
+
+            default: throw new System.Exception($"'{InputManager.TetrominoPlayerNumber}' is not a valid player number.");
+        }
     }
 
     // Tetrominoes should be deactivated once they reach the ground, but
@@ -117,13 +132,13 @@ public class GameBoard : MonoBehaviour
             _fallingTetrominoes.Remove(tetromino);
         }
 
+        InputManager.SwapTetrominoPlayer();
+
         if (tetromino.IsHighlighted)
         {
             HighlightTetromino(tetromino, false);
             HighlightLowestFallingTetromino();
         }
-
-        InputManager.SwapTetrominoPlayer();
 
         _staticTetrominoes.Add(tetromino);
 
@@ -243,7 +258,7 @@ public class GameBoard : MonoBehaviour
         _fallingTetrominoes.Add(tetromino);
     }
 
-    private void HighlightTetromino(Tetromino tetromino, bool highlight)
+    private void HighlightTetromino(Tetromino tetromino, bool highlight, Color color = default)
     {
         if (tetromino.IsHighlighted == highlight) { return;  }
 
@@ -257,13 +272,15 @@ public class GameBoard : MonoBehaviour
         }
 
         _usingShortTick = false;
-        tetromino.SetHighlight(highlight);
+        tetromino.SetHighlight(highlight, color);
     }
 
     private void HighlightLowestFallingTetromino()
     {
         if (!_fallingTetrominoes.Any()) { return; }
-        HighlightTetromino(_fallingTetrominoes.OrderBy(x => x.transform.position.y).FirstOrDefault(), true);
+
+        var tetrominoToHighlight = _fallingTetrominoes.OrderBy(x => x.transform.position.y).FirstOrDefault();
+        HighlightTetromino(tetrominoToHighlight, true, GetOutlineColor());
     }
 
     private bool RowIsFull(int yPosition)
